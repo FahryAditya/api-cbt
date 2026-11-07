@@ -1,0 +1,234 @@
+import { Request, Response } from "express";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
+import { prisma } from "../config/prisma";
+
+export const getExamsController = async (_req: Request, res: Response) => {
+  try {
+    const exams = await (prisma.ujian.findMany as any)({
+      include: {
+        mapel: true,
+        bankSoal: {
+          include: {
+            _count: { select: { soalList: true } },
+          },
+        },
+        targetKelas: {
+          include: { kelas: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const formatted = exams.map((ex: any) => ({
+      id: ex.id,
+      title: ex.judul,
+      subject: ex.mapel?.nama || "Umum",
+      targetClasses: (ex.targetKelas || []).map((tk: any) => tk.kelas?.nama),
+      token: ex.token || "BELUM_DIATUR",
+      durationMinutes: ex.durasiMenit,
+      totalQuestions: ex.bankSoal?._count?.soalList || 0,
+      kkm: ex.kkm,
+      status: ex.status,
+      createdAt: ex.createdAt.toISOString(),
+    }));
+
+    res.json({ success: true, data: formatted });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const createExamController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { title, subject, targetClasses, durationMinutes, token, kkm, bankSoalId } = req.body;
+
+    if (!title || !Array.isArray(targetClasses) || targetClasses.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "Nama Ujian dan minimal satu Target Kelas wajib diisi",
+      });
+      return;
+    }
+
+    let mapel = await prisma.mataPelajaran.findFirst({
+      where: { nama: subject ? String(subject).trim() : "Umum" },
+    });
+    if (!mapel) {
+      mapel = await prisma.mataPelajaran.create({
+        data: {
+          kode: "MP-" + Math.floor(100 + Math.random() * 900),
+          nama: subject ? String(subject).trim() : "Umum",
+        },
+      });
+    }
+
+    let resolvedBankSoalId = bankSoalId;
+    if (!resolvedBankSoalId) {
+      const existingBankSoal = await prisma.bankSoal.findFirst({
+        where: { mapelId: mapel.id },
+      });
+      if (existingBankSoal) {
+        resolvedBankSoalId = existingBankSoal.id;
+      } else {
+        const adminUser = await prisma.user.findFirst({ where: { role: "ADMIN" } });
+        const newBankSoal = await prisma.bankSoal.create({
+          data: {
+            kode: "BS-" + Math.floor(1000 + Math.random() * 9000),
+            judul: `Bank Soal ${title}`,
+            mapelId: mapel.id,
+            pembuatId: adminUser?.id || req.user!.userId,
+          },
+        });
+        resolvedBankSoalId = newBankSoal.id;
+      }
+    }
+
+    const kelasIds: string[] = [];
+    for (const className of targetClasses) {
+      const trimmed = String(className).trim();
+      if (!trimmed) continue;
+
+      let kelas = await prisma.kelas.findUnique({
+        where: { nama: trimmed },
+      });
+      if (!kelas) {
+        kelas = await prisma.kelas.create({
+          data: {
+            nama: trimmed,
+            tingkat: 12,
+          },
+        });
+      }
+      kelasIds.push(kelas.id);
+    }
+
+    const now = new Date();
+    const endTime = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    const newExam = await (prisma.ujian.create as any)({
+      data: {
+        judul: String(title).trim(),
+        mapelId: mapel.id,
+        bankSoalId: resolvedBankSoalId,
+        token: token ? String(token).toUpperCase().trim() : "EXM-" + Math.floor(1000 + Math.random() * 9000),
+        durasiMenit: Number(durationMinutes) || 90,
+        kkm: Number(kkm) || 75.0,
+        waktuMulai: now,
+        waktuSelesai: endTime,
+        status: "AKTIF",
+        targetKelas: {
+          create: kelasIds.map((kelasId) => ({ kelasId })),
+        },
+      },
+      include: {
+        mapel: true,
+        targetKelas: { include: { kelas: true } },
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Paket ujian berhasil diterbitkan di Neon PostgreSQL",
+      data: {
+        id: newExam.id,
+        title: newExam.judul,
+        subject: newExam.mapel?.nama,
+        targetClasses: (newExam.targetKelas || []).map((tk: any) => tk.kelas?.nama),
+        token: newExam.token,
+        kkm: newExam.kkm,
+        durationMinutes: newExam.durasiMenit,
+        status: newExam.status,
+      },
+    });
+  } catch (err: any) {
+    console.error("Create Exam Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const regenerateTokenController = async (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const newToken = "MAT-" + Math.floor(1000 + Math.random() * 9000);
+
+    const updated = await prisma.ujian.update({
+      where: { id },
+      data: { token: newToken },
+    });
+
+    res.json({
+      success: true,
+      message: "Token ujian baru berhasil diaktifkan di database",
+      data: { token: updated.token },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateKkmController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { kkm } = req.body;
+    const numKkm = Number(kkm);
+
+    if (isNaN(numKkm) || numKkm < 0 || numKkm > 100) {
+      res.status(400).json({ success: false, message: "Nilai KKM harus berupa angka 0-100" });
+      return;
+    }
+
+    const updated = await prisma.ujian.update({
+      where: { id },
+      data: { kkm: numKkm },
+    });
+
+    res.json({
+      success: true,
+      message: `Nilai KKM berhasil diperbarui menjadi ${numKkm} di database Neon PostgreSQL`,
+      data: { id: updated.id, kkm: updated.kkm },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getClassesController = async (_req: Request, res: Response) => {
+  try {
+    const classes = await prisma.kelas.findMany({
+      orderBy: { nama: "asc" },
+    });
+    res.json({ success: true, data: classes.map((c) => c.nama) });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const addClassController = async (req: Request, res: Response) => {
+  try {
+    const { name, tingkat, jurusan } = req.body;
+    const trimmed = (name || "").trim();
+
+    if (!trimmed) {
+      res.status(400).json({ success: false, message: "Nama kelas tidak boleh kosong" });
+      return;
+    }
+
+    const created = await prisma.kelas.upsert({
+      where: { nama: trimmed },
+      update: {},
+      create: {
+        nama: trimmed,
+        tingkat: Number(tingkat) || 12,
+        jurusan: jurusan || null,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Kelas berhasil disimpan di database Neon PostgreSQL",
+      data: created,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  GURU
+  SISWA
+}
+
+enum TipeSoal {
+  PILIHAN_GANDA
+  ESSAY
+  BENAR_SALAH
+}
+
+enum StatusUjian {
+  DRAFT
+  AKTIF
+  SELESAI
+}
+
+enum StatusSesi {
+  BELUM_MULAI
+  SEDANG_MENGERJAKAN
+  SELESAI
+  TERKUNCI
+}
+
+enum JenisKelamin {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  nama      String
+  email     String?  @unique
+  password  String
+  role      Role     @default(SISWA)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  siswaProfile SiswaProfile?
+  guruProfile  GuruProfile?
+  bankSoalDibuat BankSoal[]
+  sesiUjian    SesiUjian[]
+
+  @@map("users")
+}
+
+model Kelas {
+  id        String   @id @default(cuid())
+  nama      String   @unique
+  tingkat   Int
+  jurusan   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  siswa      SiswaProfile[]
+  ujianKelas UjianKelas[]
+
+  @@map("kelas")
+}
+
+model SiswaProfile {
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  nisn         String?       @unique
+  jenisKelamin JenisKelamin?
+  kelasId      String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kelas Kelas @relation(fields: [kelasId], references: [id], onDelete: Restrict)
+
+  @@map("siswa_profiles")
+}
+
+model GuruProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  nip       String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("guru_profiles")
+}
+
+model MataPelajaran {
+  id        String   @id @default(cuid())
+  kode      String   @unique
+  nama      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bankSoal BankSoal[]
+  ujian    Ujian[]
+
+  @@map("mata_pelajaran")
+}
+
+model BankSoal {
+  id        String   @id @default(cuid())
+  kode      String   @unique
+  judul     String
+  deskripsi String?
+  mapelId   String
+  pembuatId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mapel   MataPelajaran @relation(fields: [mapelId], references: [id], onDelete: Restrict)
+  pembuat User          @relation(fields: [pembuatId], references: [id], onDelete: Restrict)
+  soalList Soal[]
+  ujianList Ujian[]
+
+  @@map("bank_soal")
+}
+
+model Soal {
+  id          String   @id @default(cuid())
+  bankSoalId  String
+  nomorUrut   Int      @default(1)
+  tipeSoal    TipeSoal @default(PILIHAN_GANDA)
+  pertanyaan  String   @db.Text
+  gambarUrl   String?
+  audioUrl    String?
+  bobotNilai  Float    @default(1.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bankSoal       BankSoal         @relation(fields: [bankSoalId], references: [id], onDelete: Cascade)
+  pilihanJawaban PilihanJawaban[]
+  jawabanSiswa   JawabanSiswa[]
+
+  @@map("soal")
+}
+
+model PilihanJawaban {
+  id        String   @id @default(cuid())
+  soalId    String
+  label     String   // A, B, C, D, E
+  teks      String   @db.Text
+  gambarUrl String?
+  isKunci   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  soal         Soal           @relation(fields: [soalId], references: [id], onDelete: Cascade)
+  jawabanSiswa JawabanSiswa[]
+
+  @@map("pilihan_jawaban")
+}
+
+model Ujian {
+  id             String      @id @default(cuid())
+  judul          String
+  deskripsi      String?
+  mapelId        String
+  bankSoalId     String
+  token          String?
+  durasiMenit    Int         @default(60)
+  waktuMulai     DateTime
+  waktuSelesai   DateTime
+  acakSoal       Boolean     @default(false)
+  acakOpsi       Boolean     @default(false)
+  tampilkanNilai Boolean     @default(false)
+  kkm            Float       @default(75.0)
+  status         StatusUjian @default(DRAFT)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  mapel         MataPelajaran @relation(fields: [mapelId], references: [id], onDelete: Restrict)
+  bankSoal      BankSoal      @relation(fields: [bankSoalId], references: [id], onDelete: Restrict)
+  targetKelas   UjianKelas[]
+  sesiUjianList SesiUjian[]
+
+  @@map("ujian")
+}
+
+model UjianKelas {
+  id      String @id @default(cuid())
+  ujianId String
+  kelasId String
+
+  ujian Ujian @relation(fields: [ujianId], references: [id], onDelete: Cascade)
+  kelas Kelas @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+
+  @@unique([ujianId, kelasId])
+  @@map("ujian_kelas")
+}
+
+model SesiUjian {
+  id                String     @id @default(cuid())
+  ujianId           String
+  siswaId           String
+  status            StatusSesi @default(BELUM_MULAI)
+  waktuMulai        DateTime?
+  waktuSelesai      DateTime?
+  sisaWaktuDetik    Int?
+  nilaiAkhir        Float?
+  jumlahPelanggaran Int        @default(0)
+  ipAddress         String?
+  userAgent         String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  ujian       Ujian          @relation(fields: [ujianId], references: [id], onDelete: Cascade)
+  siswa       User           @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  jawabanList JawabanSiswa[]
+
+  @@unique([ujianId, siswaId])
+  @@map("sesi_ujian")
+}
+
+model JawabanSiswa {
+  id           String   @id @default(cuid())
+  sesiUjianId  String
+  soalId       String
+  pilihanId    String?
+  jawabanEssay String?  @db.Text
+  isRaguRagu   Boolean  @default(false)
+  isBenar      Boolean?
+  skor         Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sesiUjian SesiUjian       @relation(fields: [sesiUjianId], references: [id], onDelete: Cascade)
+  soal      Soal            @relation(fields: [soalId], references: [id], onDelete: Cascade)
+  pilihan   PilihanJawaban? @relation(fields: [pilihanId], references: [id], onDelete: SetNull)
+
+  @@unique([sesiUjianId, soalId])
+  @@map("jawaban_siswa")
+}
