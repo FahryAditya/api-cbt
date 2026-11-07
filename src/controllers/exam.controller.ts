@@ -77,7 +77,7 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
     const initialAnswers: Record<number, string> = {};
     const initialFlagged: Record<number, boolean> = {};
 
-    sesi.jawabanList.forEach((j) => {
+    sesi.jawabanList.forEach((j: any) => {
       // mapping jawaban
     });
 
@@ -92,13 +92,13 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
     }, 10800);
 
     // Format butir soal untuk dikirim ke siswa (tanpa kunci jawaban!)
-    const formattedQuestions = exam.bankSoal.soalList.map((q) => ({
+    const formattedQuestions = exam.bankSoal.soalList.map((q: any) => ({
       id: q.id,
       number: q.nomorUrut,
       text: q.pertanyaan,
       points: q.bobotNilai,
       imageUrl: q.gambarUrl,
-      options: q.pilihanJawaban.map((opt) => ({
+      options: q.pilihanJawaban.map((opt: any) => ({
         id: opt.id,
         label: opt.label,
         text: opt.teks,
@@ -282,9 +282,9 @@ export const submitExamController = async (req: AuthenticatedRequest, res: Respo
     let correctCount = 0;
     let wrongCount = 0;
 
-    allQuestions.forEach((soal) => {
-      const kunciJawaban = soal.pilihanJawaban.find((p) => p.isKunci);
-      const jawabanSiswa = sesi.jawabanList.find((j) => j.soalId === soal.id);
+    allQuestions.forEach((soal: any) => {
+      const kunciJawaban = soal.pilihanJawaban.find((p: any) => p.isKunci);
+      const jawabanSiswa = sesi.jawabanList.find((j: any) => j.soalId === soal.id);
 
       if (jawabanSiswa && jawabanSiswa.pilihanId) {
         if (kunciJawaban && jawabanSiswa.pilihanId === kunciJawaban.id) {

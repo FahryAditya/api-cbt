@@ -351,7 +351,7 @@ export const getAnalisisSoalController = async (req: Request, res: Response) => 
 
     const totalAnswers = answers.length || 1;
     const distractorOptions = (soal.pilihanJawaban || []).map((opt: any) => {
-      const count = answers.filter((a) => a.pilihanId === opt.id).length;
+      const count = answers.filter((a: any) => a.pilihanId === opt.id).length;
       const percentage = Math.round((count / totalAnswers) * 100);
       return {
         id: opt.id,

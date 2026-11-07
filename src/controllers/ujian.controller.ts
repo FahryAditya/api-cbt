@@ -197,7 +197,7 @@ export const getClassesController = async (_req: Request, res: Response) => {
     const classes = await prisma.kelas.findMany({
       orderBy: { nama: "asc" },
     });
-    res.json({ success: true, data: classes.map((c) => c.nama) });
+    res.json({ success: true, data: classes.map((c: any) => c.nama) });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }
