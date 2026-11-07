@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+const REDIS_URL = process.env.REDIS_URL;
+const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
 
 // In-memory fallback cache when Redis is unavailable or offline
 const memoryCache = new Map<string, { value: any; expiry: number | null }>();
@@ -8,27 +9,31 @@ const memoryCache = new Map<string, { value: any; expiry: number | null }>();
 let isRedisConnected = false;
 let redisClient: Redis | null = null;
 
-try {
-  redisClient = new Redis(REDIS_URL, {
-    maxRetriesPerRequest: 1,
-    retryStrategy: () => null, // don't spam reconnect if server is offline
-    lazyConnect: true,
-  });
+// Hanya hubungkan ke Redis jika URL disediakan dan bukan localhost saat production/serverless
+if (REDIS_URL && (!isProd || !REDIS_URL.includes("localhost"))) {
+  try {
+    redisClient = new Redis(REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      retryStrategy: () => null, // don't spam reconnect if server is offline
+      lazyConnect: true,
+      connectTimeout: 2000,
+    });
 
-  redisClient.connect().then(() => {
-    isRedisConnected = true;
-    console.log("⚡ [Redis] Terhubung ke Redis Server:", REDIS_URL);
-  }).catch((err) => {
-    isRedisConnected = false;
-    console.warn("⚠️  [Redis] Server offline, beralih ke Fast In-Memory Fallback Cache:", err.message);
-  });
+    redisClient.connect().then(() => {
+      isRedisConnected = true;
+      console.log("⚡ [Redis] Terhubung ke Redis Server:", REDIS_URL);
+    }).catch((err) => {
+      isRedisConnected = false;
+      console.warn("⚠️  [Redis] Server offline, beralih ke Fast In-Memory Fallback Cache:", err.message);
+    });
 
-  redisClient.on("error", (err) => {
+    redisClient.on("error", () => {
+      isRedisConnected = false;
+    });
+  } catch (err: any) {
     isRedisConnected = false;
-  });
-} catch (err: any) {
-  isRedisConnected = false;
-  console.warn("⚠️  [Redis] Inisialisasi fallback:", err?.message);
+    console.warn("⚠️  [Redis] Inisialisasi fallback:", err?.message);
+  }
 }
 
 /**
