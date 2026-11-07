@@ -160,6 +160,15 @@ export const saveAnswerController = async (req: AuthenticatedRequest, res: Respo
       },
     });
 
+    if (sesi && sesi.status === "TERKUNCI") {
+      res.status(403).json({
+        success: false,
+        isLocked: true,
+        message: "Sesi ujian Anda terkunci karena pelanggaran. Hubungi pengawas untuk membuka kembali.",
+      });
+      return;
+    }
+
     if (sesi && sesi.status !== "SELESAI") {
       let resolvedSoalId = soalId;
 
@@ -222,17 +231,81 @@ export const saveAnswerController = async (req: AuthenticatedRequest, res: Respo
 
 export const recordViolationController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { ujianId } = req.body;
+    const { ujianId, sesiId } = req.body;
     const studentId = req.user?.userId;
 
-    if (studentId && ujianId) {
-      await prisma.sesiUjian.updateMany({
-        where: { ujianId, siswaId: studentId },
-        data: { jumlahPelanggaran: { increment: 1 } },
+    let targetSesi = null;
+    if (sesiId) {
+      targetSesi = await prisma.sesiUjian.findUnique({
+        where: { id: String(sesiId) },
+      });
+    } else if (studentId && ujianId) {
+      targetSesi = await prisma.sesiUjian.findUnique({
+        where: { ujianId_siswaId: { ujianId: String(ujianId), siswaId: String(studentId) } },
       });
     }
 
-    res.json({ success: true, message: "Pelanggaran dicatat oleh sistem" });
+    if (!targetSesi) {
+      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan" });
+      return;
+    }
+
+    const currentCount = Number(targetSesi.jumlahPelanggaran || 0) + 1;
+    const shouldLock = currentCount >= 3;
+
+    const updated = await prisma.sesiUjian.update({
+      where: { id: targetSesi.id },
+      data: {
+        jumlahPelanggaran: currentCount,
+        ...(shouldLock ? { status: "TERKUNCI" } : {}),
+      },
+    });
+
+    res.json({
+      success: true,
+      violations: updated.jumlahPelanggaran,
+      isLocked: updated.status === "TERKUNCI",
+      status: updated.status,
+      message: shouldLock
+        ? "Batas pelanggaran tercapai (3x). Halaman ujian Anda telah dikunci oleh sistem."
+        : `Pelanggaran dicatat (${updated.jumlahPelanggaran}x). Harap tetap berada di halaman ujian.`,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const checkSessionStatusController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const sesiIdParam = req.params.sesiId ? String(req.params.sesiId) : undefined;
+    const studentId = req.user?.userId;
+
+    let sesi = null;
+    if (sesiIdParam) {
+      sesi = await prisma.sesiUjian.findUnique({ where: { id: sesiIdParam } });
+    } else if (studentId) {
+      sesi = await prisma.sesiUjian.findFirst({
+        where: { siswaId: studentId },
+        orderBy: { updatedAt: "desc" },
+      });
+    }
+
+    if (!sesi) {
+      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        sesiId: sesi.id,
+        ujianId: sesi.ujianId,
+        status: sesi.status,
+        isLocked: sesi.status === "TERKUNCI",
+        violations: sesi.jumlahPelanggaran,
+        timeLeft: sesi.sisaWaktuDetik,
+      },
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

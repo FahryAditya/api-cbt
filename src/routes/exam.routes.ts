@@ -4,6 +4,7 @@ import {
   saveAnswerController,
   recordViolationController,
   submitExamController,
+  checkSessionStatusController,
 } from "../controllers/exam.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { examAnswerLimiter } from "../middlewares/rate-limit.middleware";
@@ -11,6 +12,7 @@ import { examAnswerLimiter } from "../middlewares/rate-limit.middleware";
 const router = Router();
 
 router.post("/start", authMiddleware, startExamController);
+router.get("/status/:sesiId?", authMiddleware, checkSessionStatusController);
 router.put("/answer", authMiddleware, examAnswerLimiter, saveAnswerController);
 router.post("/violation", authMiddleware, recordViolationController);
 router.post("/submit", authMiddleware, submitExamController);

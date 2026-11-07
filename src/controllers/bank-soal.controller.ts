@@ -200,3 +200,50 @@ export const deleteSoalController = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const updateSoalController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const soalId = String(req.params.soalId);
+    const { pertanyaan, bobotNilai, options, gambarUrl } = req.body;
+
+    if (!pertanyaan || !Array.isArray(options) || options.length < 2) {
+      res.status(400).json({
+        success: false,
+        message: "Pertanyaan dan minimal 2 opsi pilihan jawaban (A, B, ...) wajib diisi",
+      });
+      return;
+    }
+
+    // 1. Update butir soal
+    await prisma.soal.update({
+      where: { id: soalId },
+      data: {
+        pertanyaan: String(pertanyaan),
+        bobotNilai: Number(bobotNilai) || 2.5,
+        gambarUrl: gambarUrl ? String(gambarUrl) : null,
+      },
+    });
+
+    // 2. Hapus pilihan lama dan buat pilihan baru yang diperbarui
+    await prisma.pilihanJawaban.deleteMany({
+      where: { soalId },
+    });
+
+    await prisma.pilihanJawaban.createMany({
+      data: options.map((opt: any) => ({
+        soalId,
+        label: String(opt.label).toUpperCase(),
+        teks: String(opt.text),
+        isKunci: Boolean(opt.isCorrect),
+        gambarUrl: opt.imageUrl ? String(opt.imageUrl) : null,
+      })),
+    });
+
+    res.json({
+      success: true,
+      message: "Butir soal berhasil diperbarui di database Neon PostgreSQL",
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
