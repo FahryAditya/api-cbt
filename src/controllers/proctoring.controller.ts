@@ -139,6 +139,12 @@ export const getLiveProctoringController = async (req: Request, res: Response) =
       ? Math.round((formattedStudents.reduce((acc: number, curr: any) => acc + curr.progress, 0) / (formattedStudents.length * totalQuestions)) * 100)
       : 0;
 
+    const durasiDetik = (exam?.durasiMenit || 60) * 60;
+    const gHrs = String(Math.floor(durasiDetik / 3600)).padStart(2, "0");
+    const gMins = String(Math.floor((durasiDetik % 3600) / 60)).padStart(2, "0");
+    const gSecs = String(durasiDetik % 60).padStart(2, "0");
+    const globalTimer = `${gHrs}:${gMins}:${gSecs}`;
+
     res.json({
       success: true,
       data: {
@@ -150,7 +156,7 @@ export const getLiveProctoringController = async (req: Request, res: Response) =
           completedCount,
           avgProgress,
           totalViolations,
-          globalTimer: "01:50:21",
+          globalTimer,
         },
         students: formattedStudents,
       },
