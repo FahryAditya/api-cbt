@@ -207,8 +207,8 @@ export const loginController = async (req: Request, res: Response): Promise<void
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          { username: trimmedUsername },
-          { email: trimmedUsername },
+          { username: { equals: trimmedUsername, mode: "insensitive" } },
+          { email: { equals: trimmedUsername, mode: "insensitive" } },
           { siswaProfile: { nisn: trimmedUsername } },
         ],
       },

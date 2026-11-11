@@ -40,6 +40,7 @@ async function main() {
 
   // 3. Buat Akun Admin & Guru
   const adminPassword = await hashPassword("admin123");
+  const widodoPassword = await hashPassword("Widodo1123");
   const guruPassword = await hashPassword("guru123");
 
   await prisma.user.create({
@@ -48,6 +49,15 @@ async function main() {
       nama: "Administrator Sekolah",
       email: "admin@sekolah.sch.id",
       password: adminPassword,
+      role: "ADMIN",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      username: "Widodo",
+      nama: "Widodo",
+      password: widodoPassword,
       role: "ADMIN",
     },
   });
