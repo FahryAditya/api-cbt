@@ -378,3 +378,109 @@ export const getAnalisisSoalController = async (req: Request, res: Response) => 
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getDetailJawabanSiswaController = async (req: Request, res: Response) => {
+  try {
+    const sesiId = String(req.params.sesiId);
+    const sesi = await (prisma.sesiUjian.findUnique as any)({
+      where: { id: sesiId },
+      include: {
+        siswa: {
+          include: {
+            siswaProfile: { include: { kelas: true } },
+          },
+        },
+        ujian: {
+          include: {
+            bankSoal: {
+              include: {
+                soalList: {
+                  include: {
+                    pilihanJawaban: { orderBy: { label: "asc" } },
+                  },
+                  orderBy: { nomorUrut: "asc" },
+                },
+              },
+            },
+          },
+        },
+        jawabanList: {
+          include: { pilihan: true },
+        },
+      },
+    });
+
+    if (!sesi) {
+      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan" });
+      return;
+    }
+
+    const soalList = sesi.ujian?.bankSoal?.soalList || [];
+    const jawabanMap = new Map<string, any>();
+    (sesi.jawabanList || []).forEach((j: any) => jawabanMap.set(j.soalId, j));
+
+    let correctCount = 0;
+    let wrongCount = 0;
+    let emptyCount = 0;
+
+    const answers = soalList.map((soal: any) => {
+      const jawaban = jawabanMap.get(soal.id);
+      const selectedId = jawaban?.pilihanId || null;
+      const kunci = (soal.pilihanJawaban || []).find((p: any) => p.isKunci);
+      const selected = (soal.pilihanJawaban || []).find((p: any) => p.id === selectedId);
+
+      let status: "BENAR" | "SALAH" | "KOSONG" = "KOSONG";
+      if (selected) {
+        if (kunci && selected.id === kunci.id) {
+          status = "BENAR";
+          correctCount += 1;
+        } else {
+          status = "SALAH";
+          wrongCount += 1;
+        }
+      } else {
+        emptyCount += 1;
+      }
+
+      return {
+        soalId: soal.id,
+        nomorUrut: soal.nomorUrut,
+        pertanyaan: soal.pertanyaan,
+        bobotNilai: soal.bobotNilai,
+        kunciLabel: kunci?.label || "-",
+        kunciTeks: kunci?.teks || "-",
+        jawabanLabel: selected?.label || null,
+        jawabanTeks: selected?.teks || null,
+        status,
+        options: (soal.pilihanJawaban || []).map((opt: any) => ({
+          id: opt.id,
+          label: opt.label,
+          text: opt.teks,
+          isCorrect: Boolean(opt.isKunci),
+          isSelected: opt.id === selectedId,
+        })),
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        sesiId: sesi.id,
+        studentName: sesi.siswa?.nama || "Siswa",
+        studentClass: sesi.siswa?.siswaProfile?.kelas?.nama || "-",
+        examTitle: sesi.ujian?.judul || "Ujian",
+        kkm: sesi.ujian?.kkm ?? 75,
+        score: sesi.nilaiAkhir ?? 0,
+        status: (sesi.nilaiAkhir ?? 0) >= (sesi.ujian?.kkm ?? 75) ? "Tuntas" : "Belum Tuntas",
+        totalQuestions: soalList.length,
+        correctCount,
+        wrongCount,
+        emptyCount,
+        answers,
+      },
+    });
+  } catch (err: any) {
+    console.error("Get Detail Jawaban Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
