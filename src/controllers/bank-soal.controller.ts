@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { prisma } from "../config/prisma";
+import { extractTextFromDocxBase64, parseWordQuestions } from "../utils/word-parser";
 
 export const getBankSoalController = async (_req: Request, res: Response) => {
   try {
@@ -245,5 +246,146 @@ export const updateSoalController = async (req: AuthenticatedRequest, res: Respo
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const parseWordBankSoalController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { fileBase64, rawText, defaultPoints } = req.body;
+    const points = Number(defaultPoints) > 0 ? Number(defaultPoints) : 1;
+
+    let extractedText = "";
+    if (fileBase64 && typeof fileBase64 === "string") {
+      extractedText = await extractTextFromDocxBase64(fileBase64);
+    } else if (rawText && typeof rawText === "string") {
+      extractedText = rawText;
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Upload file .docx atau tempel teks soal dari Word terlebih dahulu.",
+      });
+      return;
+    }
+
+    const parsed = parseWordQuestions(extractedText, points);
+    if (parsed.questions.length === 0) {
+      res.status(400).json({
+        success: false,
+        message:
+          "Tidak ada butir soal pilihan ganda yang terdeteksi. Pastikan format nomor soal (1. ...) dan pilihan (A. ... B. ...) sesuai.",
+        data: parsed,
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: `Berhasil membaca ${parsed.questions.length} butir soal dari dokumen Word.`,
+      data: parsed,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal memproses file Word (.docx).",
+    });
+  }
+};
+
+export const importSoalBulkController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const bankSoalId = String(req.params.id);
+    const { questions, replaceExisting } = req.body;
+
+    const bank = await prisma.bankSoal.findUnique({
+      where: { id: bankSoalId },
+    });
+    if (!bank) {
+      res.status(404).json({ success: false, message: "Paket Bank Soal tidak ditemukan." });
+      return;
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "Daftar soal yang akan diimport tidak boleh kosong.",
+      });
+      return;
+    }
+
+    const validItems = questions.filter(
+      (q: any) =>
+        (q.pertanyaan || q.text) &&
+        Array.isArray(q.options) &&
+        q.options.length >= 2
+    );
+
+    if (validItems.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "Minimal harus ada 1 soal valid dengan pertanyaan dan 2+ pilihan jawaban.",
+      });
+      return;
+    }
+
+    if (Boolean(replaceExisting)) {
+      await prisma.soal.deleteMany({
+        where: { bankSoalId },
+      });
+    }
+
+    const agg = await prisma.soal.aggregate({
+      where: { bankSoalId },
+      _max: { nomorUrut: true },
+    });
+    let nextNomor = (agg._max?.nomorUrut ?? 0) + 1;
+
+    // Insert in chunks to stay safe under Neon serverless transaction limits
+    const CHUNK_SIZE = 15;
+    let importedCount = 0;
+
+    for (let i = 0; i < validItems.length; i += CHUNK_SIZE) {
+      const chunk = validItems.slice(i, i + CHUNK_SIZE);
+      await prisma.$transaction(
+        chunk.map((item: any) => {
+          const nomorUrut = nextNomor++;
+          const normalizedOptions = item.options.map((opt: any) => ({
+            label: String(opt.label || "A").trim().toUpperCase(),
+            teks: String(opt.text ?? opt.teks ?? "").trim(),
+            isKunci: Boolean(opt.isCorrect ?? opt.isKunci),
+            gambarUrl: opt.imageUrl ? String(opt.imageUrl) : null,
+          }));
+
+          // Guarantee at least one key if none was flagged
+          if (!normalizedOptions.some((o: any) => o.isKunci) && normalizedOptions.length > 0) {
+            normalizedOptions[0].isKunci = true;
+          }
+
+          return prisma.soal.create({
+            data: {
+              bankSoalId,
+              nomorUrut,
+              pertanyaan: String(item.pertanyaan ?? item.text).trim(),
+              bobotNilai: Number(item.bobotNilai ?? item.points) || 1,
+              gambarUrl: item.gambarUrl ? String(item.gambarUrl) : null,
+              pilihanJawaban: {
+                create: normalizedOptions,
+              },
+            },
+          });
+        })
+      );
+      importedCount += chunk.length;
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `${importedCount} butir soal berhasil diimport ke paket "${bank.judul}"!`,
+      data: { importedCount, bankSoalId },
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal mengimport soal ke database.",
+    });
   }
 };
