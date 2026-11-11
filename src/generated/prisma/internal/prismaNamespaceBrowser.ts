@@ -194,6 +194,8 @@ export const UjianScalarFieldEnum = {
   mapelId: 'mapelId',
   bankSoalId: 'bankSoalId',
   token: 'token',
+  tokenUpdatedAt: 'tokenUpdatedAt',
+  autoRotateToken: 'autoRotateToken',
   durasiMenit: 'durasiMenit',
   waktuMulai: 'waktuMulai',
   waktuSelesai: 'waktuSelesai',

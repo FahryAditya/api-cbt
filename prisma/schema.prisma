@@ -169,8 +169,10 @@ model Ujian {
   deskripsi      String?
   mapelId        String
   bankSoalId     String
-  token          String?
-  durasiMenit    Int         @default(60)
+  token           String?
+  tokenUpdatedAt  DateTime    @default(now())
+  autoRotateToken Boolean     @default(true)
+  durasiMenit     Int         @default(60)
   waktuMulai     DateTime
   waktuSelesai   DateTime
   acakSoal       Boolean     @default(false)

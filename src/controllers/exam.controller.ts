@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { cacheGet, cacheSet } from "../config/redis";
 import { prisma } from "../config/prisma";
+import { syncAllActiveExamTokens } from "../utils/token";
 
 export const startExamController = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -13,17 +14,21 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
       return;
     }
 
-    if (!token) {
+    if (!token && !ujianId) {
       res.status(400).json({ success: false, message: "Token ujian wajib dimasukkan" });
       return;
+    }
+
+    if (!ujianId) {
+      await syncAllActiveExamTokens();
     }
 
     // 1. Verifikasi Ujian & Token di Neon PostgreSQL
     const exam = await prisma.ujian.findFirst({
       where: {
         OR: [
-          { id: ujianId },
-          { token: String(token).toUpperCase().trim() },
+          ...(ujianId ? [{ id: String(ujianId) }] : []),
+          ...(token ? [{ token: String(token).toUpperCase().trim() }] : []),
         ],
         status: "AKTIF",
       },
@@ -45,40 +50,65 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
     });
 
     if (!exam) {
-      res.status(404).json({ success: false, message: "Ujian tidak ditemukan atau token salah." });
+      res.status(404).json({ success: false, message: "Ujian tidak ditemukan atau token salah / sudah kedaluwarsa." });
       return;
     }
 
-    // 2. Ambil atau Buat Sesi Ujian di Database
-    const sesi = await prisma.sesiUjian.upsert({
+    // 2. Ambil atau Buat Sesi Ujian di Database (tanpa menimpa status TERKUNCI / SELESAI)
+    let sesi = await prisma.sesiUjian.findUnique({
       where: {
         ujianId_siswaId: {
           ujianId: exam.id,
           siswaId: studentId,
         },
       },
-      update: {
-        status: "SEDANG_MENGERJAKAN",
-      },
-      create: {
-        ujianId: exam.id,
-        siswaId: studentId,
-        status: "SEDANG_MENGERJAKAN",
-        waktuMulai: new Date(),
-        sisaWaktuDetik: exam.durasiMenit * 60,
-      },
-      include: {
-        jawabanList: true,
-      },
+      include: { jawabanList: true },
     });
 
-    // 3. Simpan state sesi ke Redis Cache untuk write-behind buffering
+    if (!sesi) {
+      sesi = await prisma.sesiUjian.create({
+        data: {
+          ujianId: exam.id,
+          siswaId: studentId,
+          status: "SEDANG_MENGERJAKAN",
+          waktuMulai: new Date(),
+          sisaWaktuDetik: exam.durasiMenit * 60,
+        },
+        include: { jawabanList: true },
+      });
+    } else if (sesi.status === "BELUM_MULAI") {
+      sesi = await prisma.sesiUjian.update({
+        where: { id: sesi.id },
+        data: {
+          status: "SEDANG_MENGERJAKAN",
+          waktuMulai: sesi.waktuMulai || new Date(),
+        },
+        include: { jawabanList: true },
+      });
+    }
+
+    // 3. Pulihkan jawaban & flag dari database
     const cacheKey = `cbt:session:${exam.id}:${studentId}`;
     const initialAnswers: Record<number, string> = {};
+    const initialAnswerIds: Record<number, string> = {};
     const initialFlagged: Record<number, boolean> = {};
 
+    const soalById = new Map<string, any>();
+    exam.bankSoal.soalList.forEach((s: any) => soalById.set(s.id, s));
+
     sesi.jawabanList.forEach((j: any) => {
-      // mapping jawaban
+      const soal = soalById.get(j.soalId);
+      if (!soal) return;
+      if (j.pilihanId) {
+        const opt = soal.pilihanJawaban.find((o: any) => o.id === j.pilihanId);
+        if (opt) {
+          initialAnswers[soal.nomorUrut] = opt.label;
+          initialAnswerIds[soal.nomorUrut] = opt.id;
+        }
+      }
+      if (j.isRaguRagu) {
+        initialFlagged[soal.nomorUrut] = true;
+      }
     });
 
     await cacheSet(cacheKey, {
@@ -90,6 +120,13 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
       violations: sesi.jumlahPelanggaran,
       isSubmitted: sesi.status === "SELESAI",
     }, 10800);
+
+    // Hitung sisa waktu real jika ujian sedang berlangsung
+    let remainingSecs = sesi.sisaWaktuDetik ?? exam.durasiMenit * 60;
+    if (sesi.waktuMulai && sesi.status === "SEDANG_MENGERJAKAN") {
+      const elapsedSecs = Math.floor((Date.now() - new Date(sesi.waktuMulai).getTime()) / 1000);
+      remainingSecs = Math.max(0, exam.durasiMenit * 60 - elapsedSecs);
+    }
 
     // Format butir soal untuk dikirim ke siswa (tanpa kunci jawaban!)
     const formattedQuestions = exam.bankSoal.soalList.map((q: any) => ({
@@ -114,8 +151,16 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
         ujianId: exam.id,
         examTitle: exam.judul,
         durationMinutes: exam.durasiMenit,
+        sisaWaktuDetik: remainingSecs,
         totalQuestions: formattedQuestions.length,
         questions: formattedQuestions,
+        savedAnswers: initialAnswers,
+        savedAnswerIds: initialAnswerIds,
+        savedFlagged: initialFlagged,
+        violations: sesi.jumlahPelanggaran,
+        isLocked: sesi.status === "TERKUNCI",
+        isSubmitted: sesi.status === "SELESAI",
+        score: sesi.nilaiAkhir,
       },
     });
   } catch (err: any) {

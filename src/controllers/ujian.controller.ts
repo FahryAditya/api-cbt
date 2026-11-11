@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { prisma } from "../config/prisma";
+import {
+  ensureFreshExamToken,
+  generateExamToken,
+  TOKEN_ROTATION_MS,
+} from "../utils/token";
 
 export const getExamsController = async (_req: Request, res: Response) => {
   try {
@@ -19,18 +24,27 @@ export const getExamsController = async (_req: Request, res: Response) => {
       orderBy: { createdAt: "desc" },
     });
 
-    const formatted = exams.map((ex: any) => ({
-      id: ex.id,
-      title: ex.judul,
-      subject: ex.mapel?.nama || "Umum",
-      targetClasses: (ex.targetKelas || []).map((tk: any) => tk.kelas?.nama),
-      token: ex.token || "BELUM_DIATUR",
-      durationMinutes: ex.durasiMenit,
-      totalQuestions: ex.bankSoal?._count?.soalList || 0,
-      kkm: ex.kkm,
-      status: ex.status,
-      createdAt: ex.createdAt.toISOString(),
-    }));
+    const formatted = await Promise.all(
+      exams.map(async (ex: any) => {
+        const synced = await ensureFreshExamToken(ex);
+        return {
+          id: ex.id,
+          title: ex.judul,
+          subject: ex.mapel?.nama || "Umum",
+          targetClasses: (ex.targetKelas || []).map((tk: any) => tk.kelas?.nama),
+          token: synced.token || "BELUM_DIATUR",
+          tokenUpdatedAt: synced.tokenUpdatedAt.toISOString(),
+          tokenExpiresAt: synced.tokenExpiresAt,
+          tokenSecondsRemaining: synced.tokenSecondsRemaining,
+          autoRotateToken: ex.autoRotateToken,
+          durationMinutes: ex.durasiMenit,
+          totalQuestions: ex.bankSoal?._count?.soalList || 0,
+          kkm: ex.kkm,
+          status: ex.status,
+          createdAt: ex.createdAt.toISOString(),
+        };
+      })
+    );
 
     res.json({ success: true, data: formatted });
   } catch (err: any) {
@@ -110,7 +124,9 @@ export const createExamController = async (req: AuthenticatedRequest, res: Respo
         judul: String(title).trim(),
         mapelId: mapel.id,
         bankSoalId: resolvedBankSoalId,
-        token: token ? String(token).toUpperCase().trim() : "EXM-" + Math.floor(1000 + Math.random() * 9000),
+        token: token ? String(token).toUpperCase().trim() : generateExamToken(),
+        tokenUpdatedAt: now,
+        autoRotateToken: true,
         durasiMenit: Number(durationMinutes) || 90,
         kkm: Number(kkm) || 75.0,
         waktuMulai: now,
@@ -135,6 +151,10 @@ export const createExamController = async (req: AuthenticatedRequest, res: Respo
         subject: newExam.mapel?.nama,
         targetClasses: (newExam.targetKelas || []).map((tk: any) => tk.kelas?.nama),
         token: newExam.token,
+        tokenUpdatedAt: newExam.tokenUpdatedAt.toISOString(),
+        tokenExpiresAt: new Date(newExam.tokenUpdatedAt.getTime() + TOKEN_ROTATION_MS).toISOString(),
+        tokenSecondsRemaining: Math.floor(TOKEN_ROTATION_MS / 1000),
+        autoRotateToken: newExam.autoRotateToken,
         kkm: newExam.kkm,
         durationMinutes: newExam.durasiMenit,
         status: newExam.status,
@@ -149,17 +169,26 @@ export const createExamController = async (req: AuthenticatedRequest, res: Respo
 export const regenerateTokenController = async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
-    const newToken = "MAT-" + Math.floor(1000 + Math.random() * 9000);
+    const newToken = generateExamToken();
+    const now = new Date();
 
     const updated = await prisma.ujian.update({
       where: { id },
-      data: { token: newToken },
+      data: {
+        token: newToken,
+        tokenUpdatedAt: now,
+      },
     });
 
     res.json({
       success: true,
       message: "Token ujian baru berhasil diaktifkan di database",
-      data: { token: updated.token },
+      data: {
+        token: updated.token,
+        tokenUpdatedAt: updated.tokenUpdatedAt.toISOString(),
+        tokenExpiresAt: new Date(now.getTime() + TOKEN_ROTATION_MS).toISOString(),
+        tokenSecondsRemaining: Math.floor(TOKEN_ROTATION_MS / 1000),
+      },
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });

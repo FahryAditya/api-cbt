@@ -43,6 +43,8 @@ export type UjianMinAggregateOutputType = {
   mapelId: string | null
   bankSoalId: string | null
   token: string | null
+  tokenUpdatedAt: Date | null
+  autoRotateToken: boolean | null
   durasiMenit: number | null
   waktuMulai: Date | null
   waktuSelesai: Date | null
@@ -62,6 +64,8 @@ export type UjianMaxAggregateOutputType = {
   mapelId: string | null
   bankSoalId: string | null
   token: string | null
+  tokenUpdatedAt: Date | null
+  autoRotateToken: boolean | null
   durasiMenit: number | null
   waktuMulai: Date | null
   waktuSelesai: Date | null
@@ -81,6 +85,8 @@ export type UjianCountAggregateOutputType = {
   mapelId: number
   bankSoalId: number
   token: number
+  tokenUpdatedAt: number
+  autoRotateToken: number
   durasiMenit: number
   waktuMulai: number
   waktuSelesai: number
@@ -112,6 +118,8 @@ export type UjianMinAggregateInputType = {
   mapelId?: true
   bankSoalId?: true
   token?: true
+  tokenUpdatedAt?: true
+  autoRotateToken?: true
   durasiMenit?: true
   waktuMulai?: true
   waktuSelesai?: true
@@ -131,6 +139,8 @@ export type UjianMaxAggregateInputType = {
   mapelId?: true
   bankSoalId?: true
   token?: true
+  tokenUpdatedAt?: true
+  autoRotateToken?: true
   durasiMenit?: true
   waktuMulai?: true
   waktuSelesai?: true
@@ -150,6 +160,8 @@ export type UjianCountAggregateInputType = {
   mapelId?: true
   bankSoalId?: true
   token?: true
+  tokenUpdatedAt?: true
+  autoRotateToken?: true
   durasiMenit?: true
   waktuMulai?: true
   waktuSelesai?: true
@@ -256,6 +268,8 @@ export type UjianGroupByOutputType = {
   mapelId: string
   bankSoalId: string
   token: string | null
+  tokenUpdatedAt: Date
+  autoRotateToken: boolean
   durasiMenit: number
   waktuMulai: Date
   waktuSelesai: Date
@@ -298,6 +312,8 @@ export type UjianWhereInput = {
   mapelId?: Prisma.StringFilter<"Ujian"> | string
   bankSoalId?: Prisma.StringFilter<"Ujian"> | string
   token?: Prisma.StringNullableFilter<"Ujian"> | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
+  autoRotateToken?: Prisma.BoolFilter<"Ujian"> | boolean
   durasiMenit?: Prisma.IntFilter<"Ujian"> | number
   waktuMulai?: Prisma.DateTimeFilter<"Ujian"> | Date | string
   waktuSelesai?: Prisma.DateTimeFilter<"Ujian"> | Date | string
@@ -321,6 +337,8 @@ export type UjianOrderByWithRelationInput = {
   mapelId?: Prisma.SortOrder
   bankSoalId?: Prisma.SortOrder
   token?: Prisma.SortOrderInput | Prisma.SortOrder
+  tokenUpdatedAt?: Prisma.SortOrder
+  autoRotateToken?: Prisma.SortOrder
   durasiMenit?: Prisma.SortOrder
   waktuMulai?: Prisma.SortOrder
   waktuSelesai?: Prisma.SortOrder
@@ -347,6 +365,8 @@ export type UjianWhereUniqueInput = Prisma.AtLeast<{
   mapelId?: Prisma.StringFilter<"Ujian"> | string
   bankSoalId?: Prisma.StringFilter<"Ujian"> | string
   token?: Prisma.StringNullableFilter<"Ujian"> | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
+  autoRotateToken?: Prisma.BoolFilter<"Ujian"> | boolean
   durasiMenit?: Prisma.IntFilter<"Ujian"> | number
   waktuMulai?: Prisma.DateTimeFilter<"Ujian"> | Date | string
   waktuSelesai?: Prisma.DateTimeFilter<"Ujian"> | Date | string
@@ -370,6 +390,8 @@ export type UjianOrderByWithAggregationInput = {
   mapelId?: Prisma.SortOrder
   bankSoalId?: Prisma.SortOrder
   token?: Prisma.SortOrderInput | Prisma.SortOrder
+  tokenUpdatedAt?: Prisma.SortOrder
+  autoRotateToken?: Prisma.SortOrder
   durasiMenit?: Prisma.SortOrder
   waktuMulai?: Prisma.SortOrder
   waktuSelesai?: Prisma.SortOrder
@@ -397,6 +419,8 @@ export type UjianScalarWhereWithAggregatesInput = {
   mapelId?: Prisma.StringWithAggregatesFilter<"Ujian"> | string
   bankSoalId?: Prisma.StringWithAggregatesFilter<"Ujian"> | string
   token?: Prisma.StringNullableWithAggregatesFilter<"Ujian"> | string | null
+  tokenUpdatedAt?: Prisma.DateTimeWithAggregatesFilter<"Ujian"> | Date | string
+  autoRotateToken?: Prisma.BoolWithAggregatesFilter<"Ujian"> | boolean
   durasiMenit?: Prisma.IntWithAggregatesFilter<"Ujian"> | number
   waktuMulai?: Prisma.DateTimeWithAggregatesFilter<"Ujian"> | Date | string
   waktuSelesai?: Prisma.DateTimeWithAggregatesFilter<"Ujian"> | Date | string
@@ -414,6 +438,8 @@ export type UjianCreateInput = {
   judul: string
   deskripsi?: string | null
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -437,6 +463,8 @@ export type UjianUncheckedCreateInput = {
   mapelId: string
   bankSoalId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -456,6 +484,8 @@ export type UjianUpdateInput = {
   judul?: Prisma.StringFieldUpdateOperationsInput | string
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -479,6 +509,8 @@ export type UjianUncheckedUpdateInput = {
   mapelId?: Prisma.StringFieldUpdateOperationsInput | string
   bankSoalId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -500,6 +532,8 @@ export type UjianCreateManyInput = {
   mapelId: string
   bankSoalId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -517,6 +551,8 @@ export type UjianUpdateManyMutationInput = {
   judul?: Prisma.StringFieldUpdateOperationsInput | string
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -536,6 +572,8 @@ export type UjianUncheckedUpdateManyInput = {
   mapelId?: Prisma.StringFieldUpdateOperationsInput | string
   bankSoalId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -565,6 +603,8 @@ export type UjianCountOrderByAggregateInput = {
   mapelId?: Prisma.SortOrder
   bankSoalId?: Prisma.SortOrder
   token?: Prisma.SortOrder
+  tokenUpdatedAt?: Prisma.SortOrder
+  autoRotateToken?: Prisma.SortOrder
   durasiMenit?: Prisma.SortOrder
   waktuMulai?: Prisma.SortOrder
   waktuSelesai?: Prisma.SortOrder
@@ -589,6 +629,8 @@ export type UjianMaxOrderByAggregateInput = {
   mapelId?: Prisma.SortOrder
   bankSoalId?: Prisma.SortOrder
   token?: Prisma.SortOrder
+  tokenUpdatedAt?: Prisma.SortOrder
+  autoRotateToken?: Prisma.SortOrder
   durasiMenit?: Prisma.SortOrder
   waktuMulai?: Prisma.SortOrder
   waktuSelesai?: Prisma.SortOrder
@@ -608,6 +650,8 @@ export type UjianMinOrderByAggregateInput = {
   mapelId?: Prisma.SortOrder
   bankSoalId?: Prisma.SortOrder
   token?: Prisma.SortOrder
+  tokenUpdatedAt?: Prisma.SortOrder
+  autoRotateToken?: Prisma.SortOrder
   durasiMenit?: Prisma.SortOrder
   waktuMulai?: Prisma.SortOrder
   waktuSelesai?: Prisma.SortOrder
@@ -751,6 +795,8 @@ export type UjianCreateWithoutMapelInput = {
   judul: string
   deskripsi?: string | null
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -772,6 +818,8 @@ export type UjianUncheckedCreateWithoutMapelInput = {
   deskripsi?: string | null
   bankSoalId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -822,6 +870,8 @@ export type UjianScalarWhereInput = {
   mapelId?: Prisma.StringFilter<"Ujian"> | string
   bankSoalId?: Prisma.StringFilter<"Ujian"> | string
   token?: Prisma.StringNullableFilter<"Ujian"> | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
+  autoRotateToken?: Prisma.BoolFilter<"Ujian"> | boolean
   durasiMenit?: Prisma.IntFilter<"Ujian"> | number
   waktuMulai?: Prisma.DateTimeFilter<"Ujian"> | Date | string
   waktuSelesai?: Prisma.DateTimeFilter<"Ujian"> | Date | string
@@ -839,6 +889,8 @@ export type UjianCreateWithoutBankSoalInput = {
   judul: string
   deskripsi?: string | null
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -860,6 +912,8 @@ export type UjianUncheckedCreateWithoutBankSoalInput = {
   deskripsi?: string | null
   mapelId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -905,6 +959,8 @@ export type UjianCreateWithoutTargetKelasInput = {
   judul: string
   deskripsi?: string | null
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -927,6 +983,8 @@ export type UjianUncheckedCreateWithoutTargetKelasInput = {
   mapelId: string
   bankSoalId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -961,6 +1019,8 @@ export type UjianUpdateWithoutTargetKelasInput = {
   judul?: Prisma.StringFieldUpdateOperationsInput | string
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -983,6 +1043,8 @@ export type UjianUncheckedUpdateWithoutTargetKelasInput = {
   mapelId?: Prisma.StringFieldUpdateOperationsInput | string
   bankSoalId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1001,6 +1063,8 @@ export type UjianCreateWithoutSesiUjianListInput = {
   judul: string
   deskripsi?: string | null
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -1023,6 +1087,8 @@ export type UjianUncheckedCreateWithoutSesiUjianListInput = {
   mapelId: string
   bankSoalId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -1057,6 +1123,8 @@ export type UjianUpdateWithoutSesiUjianListInput = {
   judul?: Prisma.StringFieldUpdateOperationsInput | string
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1079,6 +1147,8 @@ export type UjianUncheckedUpdateWithoutSesiUjianListInput = {
   mapelId?: Prisma.StringFieldUpdateOperationsInput | string
   bankSoalId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1098,6 +1168,8 @@ export type UjianCreateManyMapelInput = {
   deskripsi?: string | null
   bankSoalId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -1115,6 +1187,8 @@ export type UjianUpdateWithoutMapelInput = {
   judul?: Prisma.StringFieldUpdateOperationsInput | string
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1136,6 +1210,8 @@ export type UjianUncheckedUpdateWithoutMapelInput = {
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankSoalId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1156,6 +1232,8 @@ export type UjianUncheckedUpdateManyWithoutMapelInput = {
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankSoalId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1174,6 +1252,8 @@ export type UjianCreateManyBankSoalInput = {
   deskripsi?: string | null
   mapelId: string
   token?: string | null
+  tokenUpdatedAt?: Date | string
+  autoRotateToken?: boolean
   durasiMenit?: number
   waktuMulai: Date | string
   waktuSelesai: Date | string
@@ -1191,6 +1271,8 @@ export type UjianUpdateWithoutBankSoalInput = {
   judul?: Prisma.StringFieldUpdateOperationsInput | string
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1212,6 +1294,8 @@ export type UjianUncheckedUpdateWithoutBankSoalInput = {
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mapelId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1232,6 +1316,8 @@ export type UjianUncheckedUpdateManyWithoutBankSoalInput = {
   deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mapelId?: Prisma.StringFieldUpdateOperationsInput | string
   token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tokenUpdatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  autoRotateToken?: Prisma.BoolFieldUpdateOperationsInput | boolean
   durasiMenit?: Prisma.IntFieldUpdateOperationsInput | number
   waktuMulai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   waktuSelesai?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1291,6 +1377,8 @@ export type UjianSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   mapelId?: boolean
   bankSoalId?: boolean
   token?: boolean
+  tokenUpdatedAt?: boolean
+  autoRotateToken?: boolean
   durasiMenit?: boolean
   waktuMulai?: boolean
   waktuSelesai?: boolean
@@ -1315,6 +1403,8 @@ export type UjianSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   mapelId?: boolean
   bankSoalId?: boolean
   token?: boolean
+  tokenUpdatedAt?: boolean
+  autoRotateToken?: boolean
   durasiMenit?: boolean
   waktuMulai?: boolean
   waktuSelesai?: boolean
@@ -1336,6 +1426,8 @@ export type UjianSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   mapelId?: boolean
   bankSoalId?: boolean
   token?: boolean
+  tokenUpdatedAt?: boolean
+  autoRotateToken?: boolean
   durasiMenit?: boolean
   waktuMulai?: boolean
   waktuSelesai?: boolean
@@ -1357,6 +1449,8 @@ export type UjianSelectScalar = {
   mapelId?: boolean
   bankSoalId?: boolean
   token?: boolean
+  tokenUpdatedAt?: boolean
+  autoRotateToken?: boolean
   durasiMenit?: boolean
   waktuMulai?: boolean
   waktuSelesai?: boolean
@@ -1369,7 +1463,7 @@ export type UjianSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UjianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "judul" | "deskripsi" | "mapelId" | "bankSoalId" | "token" | "durasiMenit" | "waktuMulai" | "waktuSelesai" | "acakSoal" | "acakOpsi" | "tampilkanNilai" | "kkm" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["ujian"]>
+export type UjianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "judul" | "deskripsi" | "mapelId" | "bankSoalId" | "token" | "tokenUpdatedAt" | "autoRotateToken" | "durasiMenit" | "waktuMulai" | "waktuSelesai" | "acakSoal" | "acakOpsi" | "tampilkanNilai" | "kkm" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["ujian"]>
 export type UjianInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   mapel?: boolean | Prisma.MataPelajaranDefaultArgs<ExtArgs>
   bankSoal?: boolean | Prisma.BankSoalDefaultArgs<ExtArgs>
@@ -1401,6 +1495,8 @@ export type $UjianPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     mapelId: string
     bankSoalId: string
     token: string | null
+    tokenUpdatedAt: Date
+    autoRotateToken: boolean
     durasiMenit: number
     waktuMulai: Date
     waktuSelesai: Date
@@ -1844,6 +1940,8 @@ export interface UjianFieldRefs {
   readonly mapelId: Prisma.FieldRef<"Ujian", 'String'>
   readonly bankSoalId: Prisma.FieldRef<"Ujian", 'String'>
   readonly token: Prisma.FieldRef<"Ujian", 'String'>
+  readonly tokenUpdatedAt: Prisma.FieldRef<"Ujian", 'DateTime'>
+  readonly autoRotateToken: Prisma.FieldRef<"Ujian", 'Boolean'>
   readonly durasiMenit: Prisma.FieldRef<"Ujian", 'Int'>
   readonly waktuMulai: Prisma.FieldRef<"Ujian", 'DateTime'>
   readonly waktuSelesai: Prisma.FieldRef<"Ujian", 'DateTime'>
