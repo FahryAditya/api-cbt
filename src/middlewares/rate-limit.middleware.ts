@@ -6,6 +6,7 @@ export const globalLimiter = rateLimit({
   max: 300, // Maksimal 300 request per window
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: "Terlalu banyak permintaan dari IP ini. Silakan coba beberapa saat lagi.",
@@ -18,6 +19,7 @@ export const authLimiter = rateLimit({
   max: 15, // Maksimal 15 percobaan login per 5 menit
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: "Terlalu banyak percobaan login gagal. Demi keamanan, akun dibatasi selama 5 menit.",
@@ -30,6 +32,7 @@ export const examAnswerLimiter = rateLimit({
   max: 60, // Maksimal 60 request autosave per menit per koneksi (1 detik/request max)
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: "Frekuensi pengiriman jawaban terlalu cepat, penyimpanan dijadwalkan ulang.",

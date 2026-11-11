@@ -6,6 +6,7 @@ import { globalLimiter } from "./middlewares/rate-limit.middleware";
 
 export const createApp = (): Application => {
   const app = express();
+  app.set("trust proxy", 1);
 
   // Middlewares
   app.use(
@@ -20,9 +21,6 @@ export const createApp = (): Application => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Global Rate Limiter to protect server resources
-  app.use("/api", globalLimiter);
-
   // Root welcome route
   app.get(["/", "/api", "/api/"], (_req, res) => {
     res.json({
@@ -32,6 +30,9 @@ export const createApp = (): Application => {
       database: "Neon PostgreSQL (Connected)",
     });
   });
+
+  // Global Rate Limiter to protect server resources
+  app.use("/api", globalLimiter);
 
   // API Routes
   app.use("/api", apiRouter);
