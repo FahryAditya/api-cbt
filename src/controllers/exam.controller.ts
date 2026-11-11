@@ -160,7 +160,8 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
         violations: sesi.jumlahPelanggaran,
         isLocked: sesi.status === "TERKUNCI",
         isSubmitted: sesi.status === "SELESAI",
-        score: sesi.nilaiAkhir,
+        score: exam.tampilkanNilai ? sesi.nilaiAkhir : null,
+        tampilkanNilai: exam.tampilkanNilai,
       },
     });
   } catch (err: any) {
@@ -435,7 +436,8 @@ export const submitExamController = async (req: AuthenticatedRequest, res: Respo
       success: true,
       message: "Ujian berhasil dikumpulkan dan dinilai secara otomatis di Neon PostgreSQL",
       data: {
-        score,
+        score: sesi.ujian.tampilkanNilai ? score : null,
+        tampilkanNilai: sesi.ujian.tampilkanNilai,
         kkm: sesi.ujian.kkm,
         correctCount,
         wrongCount,

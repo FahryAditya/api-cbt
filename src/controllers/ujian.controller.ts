@@ -40,6 +40,7 @@ export const getExamsController = async (_req: Request, res: Response) => {
           durationMinutes: ex.durasiMenit,
           totalQuestions: ex.bankSoal?._count?.soalList || 0,
           kkm: ex.kkm,
+          tampilkanNilai: ex.tampilkanNilai,
           status: ex.status,
           createdAt: ex.createdAt.toISOString(),
         };
@@ -198,23 +199,40 @@ export const regenerateTokenController = async (req: Request, res: Response) => 
 export const updateKkmController = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = String(req.params.id);
-    const { kkm } = req.body;
-    const numKkm = Number(kkm);
+    const { kkm, tampilkanNilai } = req.body;
+    const dataToUpdate: { kkm?: number; tampilkanNilai?: boolean } = {};
 
-    if (isNaN(numKkm) || numKkm < 0 || numKkm > 100) {
-      res.status(400).json({ success: false, message: "Nilai KKM harus berupa angka 0-100" });
+    if (kkm !== undefined) {
+      const numKkm = Number(kkm);
+      if (isNaN(numKkm) || numKkm < 0 || numKkm > 100) {
+        res.status(400).json({ success: false, message: "Nilai KKM harus berupa angka 0-100" });
+        return;
+      }
+      dataToUpdate.kkm = numKkm;
+    }
+
+    if (tampilkanNilai !== undefined) {
+      dataToUpdate.tampilkanNilai = Boolean(tampilkanNilai);
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      res.status(400).json({ success: false, message: "Tidak ada pengaturan yang diubah" });
       return;
     }
 
     const updated = await prisma.ujian.update({
       where: { id },
-      data: { kkm: numKkm },
+      data: dataToUpdate,
     });
 
     res.json({
       success: true,
-      message: `Nilai KKM berhasil diperbarui menjadi ${numKkm} di database Neon PostgreSQL`,
-      data: { id: updated.id, kkm: updated.kkm },
+      message: `Pengaturan ujian berhasil diperbarui (KKM: ${updated.kkm})`,
+      data: {
+        id: updated.id,
+        kkm: updated.kkm,
+        tampilkanNilai: updated.tampilkanNilai,
+      },
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
