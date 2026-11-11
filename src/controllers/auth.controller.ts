@@ -20,12 +20,13 @@ export const studentEnterController = async (req: Request, res: Response): Promi
     if (!nama || !kelas || !jurusan || !tokenUjian) {
       res.status(400).json({
         success: false,
-        message: "Nama, Kelas, Jurusan, dan Token Ujian wajib diisi.",
+        message: "Nama Lengkap, Kelas, Jurusan, dan Token Ujian wajib diisi.",
       });
       return;
     }
 
-    const trimmedNama = String(nama).trim();
+    const rawInputNama = String(nama);
+    const trimmedNama = rawInputNama.trim();
     const trimmedKelas = String(kelas).trim();
     const trimmedJurusan = String(jurusan).trim();
     const normalizedToken = String(tokenUjian).toUpperCase().trim();
@@ -57,28 +58,89 @@ export const studentEnterController = async (req: Request, res: Response): Promi
       return;
     }
 
-    // 2. Pastikan data Kelas + Jurusan tersedia di DB
-    const kelasNama = trimmedKelas.toUpperCase().includes(trimmedJurusan.toUpperCase())
+    // 2. Cocokkan Kelas + Jurusan terhadap kelas yang SUDAH TERDAFTAR di DB (tanpa auto-create)
+    const combinedKelas = trimmedKelas.toUpperCase().includes(trimmedJurusan.toUpperCase())
       ? trimmedKelas
       : `${trimmedKelas} ${trimmedJurusan}`;
 
-    let kelasRecord = await prisma.kelas.findFirst({
+    const kelasCandidates = Array.from(new Set([combinedKelas, trimmedKelas]));
+
+    const kelasRecord = await prisma.kelas.findFirst({
       where: {
-        nama: { equals: kelasNama, mode: "insensitive" },
+        OR: kelasCandidates.map((candidate) => ({
+          nama: { equals: candidate, mode: "insensitive" },
+        })),
       },
     });
 
     if (!kelasRecord) {
-      kelasRecord = await prisma.kelas.create({
-        data: {
-          nama: kelasNama,
-          tingkat: parseTingkatFromKelas(trimmedKelas),
-          jurusan: trimmedJurusan,
-        },
+      res.status(401).json({
+        success: false,
+        message: `Kelas "${combinedKelas}" belum terdaftar di database. Pastikan Kelas & Jurusan sesuai data sekolah atau hubungi admin.`,
       });
+      return;
     }
 
-    // Pastikan kelas terhubung ke ujian agar muncul di Live Proctoring
+    // 3. Wajib cocok 100% SAMA PERSIS (exact case-sensitive) dengan nama siswa di database pada kelas tersebut (tanpa auto-create!)
+    const exactStudent = await prisma.user.findFirst({
+      where: {
+        role: "SISWA",
+        nama: { equals: rawInputNama },
+        siswaProfile: { kelasId: kelasRecord.id },
+      },
+      include: {
+        siswaProfile: { include: { kelas: true } },
+      },
+    });
+
+    if (!exactStudent || exactStudent.nama !== rawInputNama) {
+      // Cek diagnosa apakah hanya beda huruf besar/kecil atau salah kelas untuk pesan error yang jelas
+      const sameClassCaseDiff = await prisma.user.findFirst({
+        where: {
+          role: "SISWA",
+          nama: { equals: trimmedNama, mode: "insensitive" },
+          siswaProfile: { kelasId: kelasRecord.id },
+        },
+        select: { id: true },
+      });
+
+      if (sameClassCaseDiff) {
+        res.status(401).json({
+          success: false,
+          message:
+            "Penulisan Nama Lengkap belum sama persis dengan database (perhatikan huruf besar/kecil dan spasi).",
+        });
+        return;
+      }
+
+      const otherClassExact = await prisma.user.findFirst({
+        where: {
+          role: "SISWA",
+          nama: { equals: rawInputNama },
+        },
+        select: { id: true },
+      });
+
+      res.status(401).json({
+        success: false,
+        message: otherClassExact
+          ? "Nama Lengkap terdaftar, tetapi Kelas/Jurusan tidak sesuai dengan data di database."
+          : "Nama Lengkap dan Kelas Anda tidak terdaftar di database atau belum diketik sama persis sesuai data sekolah.",
+      });
+      return;
+    }
+
+    if (!exactStudent.isActive) {
+      res.status(403).json({
+        success: false,
+        message: "Akun siswa ini dinonaktifkan. Hubungi admin atau pengawas ujian.",
+      });
+      return;
+    }
+
+    const studentUser = exactStudent;
+
+    // Pastikan kelas terdaftar ikut terhubung ke ujian aktif agar muncul di Live Proctoring
     await prisma.ujianKelas.upsert({
       where: {
         ujianId_kelasId: {
@@ -92,45 +154,6 @@ export const studentEnterController = async (req: Request, res: Response): Promi
         kelasId: kelasRecord.id,
       },
     });
-
-    // 3. Cari siswa dengan nama & kelas yang sama, atau buat akun siswa baru
-    let studentUser = await prisma.user.findFirst({
-      where: {
-        role: "SISWA",
-        nama: { equals: trimmedNama, mode: "insensitive" },
-        siswaProfile: { kelasId: kelasRecord.id },
-      },
-      include: {
-        siswaProfile: { include: { kelas: true } },
-      },
-    });
-
-    if (!studentUser) {
-      const slug = trimmedNama
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "")
-        .slice(0, 12) || "siswa";
-      const randomSuffix = Math.random().toString(36).slice(2, 7);
-      const generatedUsername = `${slug}_${randomSuffix}`;
-      const randomPassword = await hashPassword(`cbt_${Date.now()}_${randomSuffix}`);
-
-      studentUser = await prisma.user.create({
-        data: {
-          username: generatedUsername,
-          nama: trimmedNama,
-          password: randomPassword,
-          role: "SISWA",
-          siswaProfile: {
-            create: {
-              kelasId: kelasRecord.id,
-            },
-          },
-        },
-        include: {
-          siswaProfile: { include: { kelas: true } },
-        },
-      });
-    }
 
     // Buat/pastikan SesiUjian sudah tercatat segera setelah token tervalidasi
     await prisma.sesiUjian.upsert({
