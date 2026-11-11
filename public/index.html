@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBT Sekolah - REST API Backend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 relative overflow-hidden">
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-lg w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative z-10 text-center">
+    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-600 mx-auto flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-sky-500/20 mb-5">
+      ⚡
+    </div>
+
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-4">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      Backend Server Active & Online
+    </div>
+
+    <h1 class="text-2xl font-extrabold text-white tracking-tight mb-2">
+      CBT Sekolah REST API
+    </h1>
+    <p class="text-slate-400 text-sm mb-6">
+      Layanan backend serverless untuk Computer-Based Test terintegrasi dengan Neon PostgreSQL.
+    </p>
+
+    <div class="bg-slate-950/60 rounded-2xl p-4 border border-slate-800/80 text-left space-y-2 mb-6">
+      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+        Endpoints Utama:
+      </div>
+      <a href="/api/health" class="flex items-center justify-between text-xs text-sky-400 hover:text-sky-300 font-mono py-1.5 px-2 rounded-lg hover:bg-slate-800/50 transition">
+        <span>GET /api/health</span>
+        <span class="text-emerald-400 font-sans">Status Check →</span>
+      </a>
+      <a href="/api/ujian" class="flex items-center justify-between text-xs text-sky-400 hover:text-sky-300 font-mono py-1.5 px-2 rounded-lg hover:bg-slate-800/50 transition">
+        <span>GET /api/ujian</span>
+        <span class="text-emerald-400 font-sans">Daftar Ujian →</span>
+      </a>
+      <a href="/api/bank-soal" class="flex items-center justify-between text-xs text-sky-400 hover:text-sky-300 font-mono py-1.5 px-2 rounded-lg hover:bg-slate-800/50 transition">
+        <span>GET /api/bank-soal</span>
+        <span class="text-emerald-400 font-sans">Bank Soal →</span>
+      </a>
+    </div>
+
+    <div class="text-xs text-slate-500">
+      Database: <span class="text-slate-300 font-medium">Neon Serverless PostgreSQL</span>
+    </div>
+  </div>
+</body>
+</html>
