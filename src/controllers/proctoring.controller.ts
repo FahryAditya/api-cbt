@@ -285,21 +285,35 @@ export const unlockSessionController = async (req: Request, res: Response) => {
     const { studentId, sesiId } = req.body;
 
     if (sesiId) {
+      const sesi = await prisma.sesiUjian.findUnique({
+        where: { id: String(sesiId) },
+        include: { ujian: { select: { batasPelanggaran: true } } },
+      });
+      const batas = sesi?.ujian?.batasPelanggaran ?? 3;
+      const resetViolations = batas > 0 ? Math.max(0, batas - 1) : 0;
+
       await prisma.sesiUjian.update({
         where: { id: String(sesiId) },
         data: {
           status: "SEDANG_MENGERJAKAN",
-          jumlahPelanggaran: 2, // berikan kesempatan setelah admin buka kunci
+          jumlahPelanggaran: resetViolations,
         },
       });
     } else if (studentId) {
-      await prisma.sesiUjian.updateMany({
-        where: { siswaId: String(studentId) },
-        data: {
-          status: "SEDANG_MENGERJAKAN",
-          jumlahPelanggaran: 2,
-        },
+      const sessions = await prisma.sesiUjian.findMany({
+        where: { siswaId: String(studentId), status: "TERKUNCI" },
+        include: { ujian: { select: { batasPelanggaran: true } } },
       });
+      for (const sesi of sessions) {
+        const batas = sesi.ujian?.batasPelanggaran ?? 3;
+        await prisma.sesiUjian.update({
+          where: { id: sesi.id },
+          data: {
+            status: "SEDANG_MENGERJAKAN",
+            jumlahPelanggaran: batas > 0 ? Math.max(0, batas - 1) : 0,
+          },
+        });
+      }
     }
 
     res.json({

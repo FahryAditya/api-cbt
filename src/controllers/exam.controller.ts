@@ -158,6 +158,7 @@ export const startExamController = async (req: AuthenticatedRequest, res: Respon
         savedAnswerIds: initialAnswerIds,
         savedFlagged: initialFlagged,
         violations: sesi.jumlahPelanggaran,
+        maxViolations: (exam as any).batasPelanggaran ?? 3,
         isLocked: sesi.status === "TERKUNCI",
         isSubmitted: sesi.status === "SELESAI",
         score: exam.tampilkanNilai ? sesi.nilaiAkhir : null,
@@ -280,14 +281,16 @@ export const recordViolationController = async (req: AuthenticatedRequest, res: 
     const { ujianId, sesiId } = req.body;
     const studentId = req.user?.userId;
 
-    let targetSesi = null;
+    let targetSesi: any = null;
     if (sesiId) {
       targetSesi = await prisma.sesiUjian.findUnique({
         where: { id: String(sesiId) },
+        include: { ujian: { select: { batasPelanggaran: true } } },
       });
     } else if (studentId && ujianId) {
       targetSesi = await prisma.sesiUjian.findUnique({
         where: { ujianId_siswaId: { ujianId: String(ujianId), siswaId: String(studentId) } },
+        include: { ujian: { select: { batasPelanggaran: true } } },
       });
     }
 
@@ -296,8 +299,9 @@ export const recordViolationController = async (req: AuthenticatedRequest, res: 
       return;
     }
 
+    const maxViolations = targetSesi.ujian?.batasPelanggaran ?? 3;
     const currentCount = Number(targetSesi.jumlahPelanggaran || 0) + 1;
-    const shouldLock = currentCount >= 3;
+    const shouldLock = maxViolations > 0 && currentCount >= maxViolations;
 
     const updated = await prisma.sesiUjian.update({
       where: { id: targetSesi.id },
@@ -310,10 +314,13 @@ export const recordViolationController = async (req: AuthenticatedRequest, res: 
     res.json({
       success: true,
       violations: updated.jumlahPelanggaran,
+      maxViolations,
       isLocked: updated.status === "TERKUNCI",
       status: updated.status,
       message: shouldLock
-        ? "Batas pelanggaran tercapai (3x). Halaman ujian Anda telah dikunci oleh sistem."
+        ? `Batas pelanggaran tercapai (${maxViolations}x). Halaman ujian Anda telah diblokir/dikunci oleh sistem.`
+        : maxViolations > 0
+        ? `Pelanggaran dicatat (${updated.jumlahPelanggaran}/${maxViolations}x). Harap tetap berada di halaman ujian.`
         : `Pelanggaran dicatat (${updated.jumlahPelanggaran}x). Harap tetap berada di halaman ujian.`,
     });
   } catch (err: any) {

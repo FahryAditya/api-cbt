@@ -29,11 +29,13 @@ export type AggregateUjian = {
 export type UjianAvgAggregateOutputType = {
   durasiMenit: number | null
   kkm: number | null
+  batasPelanggaran: number | null
 }
 
 export type UjianSumAggregateOutputType = {
   durasiMenit: number | null
   kkm: number | null
+  batasPelanggaran: number | null
 }
 
 export type UjianMinAggregateOutputType = {
@@ -52,6 +54,7 @@ export type UjianMinAggregateOutputType = {
   acakOpsi: boolean | null
   tampilkanNilai: boolean | null
   kkm: number | null
+  batasPelanggaran: number | null
   status: $Enums.StatusUjian | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -73,6 +76,7 @@ export type UjianMaxAggregateOutputType = {
   acakOpsi: boolean | null
   tampilkanNilai: boolean | null
   kkm: number | null
+  batasPelanggaran: number | null
   status: $Enums.StatusUjian | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -94,6 +98,7 @@ export type UjianCountAggregateOutputType = {
   acakOpsi: number
   tampilkanNilai: number
   kkm: number
+  batasPelanggaran: number
   status: number
   createdAt: number
   updatedAt: number
@@ -104,11 +109,13 @@ export type UjianCountAggregateOutputType = {
 export type UjianAvgAggregateInputType = {
   durasiMenit?: true
   kkm?: true
+  batasPelanggaran?: true
 }
 
 export type UjianSumAggregateInputType = {
   durasiMenit?: true
   kkm?: true
+  batasPelanggaran?: true
 }
 
 export type UjianMinAggregateInputType = {
@@ -127,6 +134,7 @@ export type UjianMinAggregateInputType = {
   acakOpsi?: true
   tampilkanNilai?: true
   kkm?: true
+  batasPelanggaran?: true
   status?: true
   createdAt?: true
   updatedAt?: true
@@ -148,6 +156,7 @@ export type UjianMaxAggregateInputType = {
   acakOpsi?: true
   tampilkanNilai?: true
   kkm?: true
+  batasPelanggaran?: true
   status?: true
   createdAt?: true
   updatedAt?: true
@@ -169,6 +178,7 @@ export type UjianCountAggregateInputType = {
   acakOpsi?: true
   tampilkanNilai?: true
   kkm?: true
+  batasPelanggaran?: true
   status?: true
   createdAt?: true
   updatedAt?: true
@@ -277,6 +287,7 @@ export type UjianGroupByOutputType = {
   acakOpsi: boolean
   tampilkanNilai: boolean
   kkm: number
+  batasPelanggaran: number
   status: $Enums.StatusUjian
   createdAt: Date
   updatedAt: Date
@@ -321,6 +332,7 @@ export type UjianWhereInput = {
   acakOpsi?: Prisma.BoolFilter<"Ujian"> | boolean
   tampilkanNilai?: Prisma.BoolFilter<"Ujian"> | boolean
   kkm?: Prisma.FloatFilter<"Ujian"> | number
+  batasPelanggaran?: Prisma.IntFilter<"Ujian"> | number
   status?: Prisma.EnumStatusUjianFilter<"Ujian"> | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
@@ -346,6 +358,7 @@ export type UjianOrderByWithRelationInput = {
   acakOpsi?: Prisma.SortOrder
   tampilkanNilai?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -374,6 +387,7 @@ export type UjianWhereUniqueInput = Prisma.AtLeast<{
   acakOpsi?: Prisma.BoolFilter<"Ujian"> | boolean
   tampilkanNilai?: Prisma.BoolFilter<"Ujian"> | boolean
   kkm?: Prisma.FloatFilter<"Ujian"> | number
+  batasPelanggaran?: Prisma.IntFilter<"Ujian"> | number
   status?: Prisma.EnumStatusUjianFilter<"Ujian"> | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
@@ -399,6 +413,7 @@ export type UjianOrderByWithAggregationInput = {
   acakOpsi?: Prisma.SortOrder
   tampilkanNilai?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -428,6 +443,7 @@ export type UjianScalarWhereWithAggregatesInput = {
   acakOpsi?: Prisma.BoolWithAggregatesFilter<"Ujian"> | boolean
   tampilkanNilai?: Prisma.BoolWithAggregatesFilter<"Ujian"> | boolean
   kkm?: Prisma.FloatWithAggregatesFilter<"Ujian"> | number
+  batasPelanggaran?: Prisma.IntWithAggregatesFilter<"Ujian"> | number
   status?: Prisma.EnumStatusUjianWithAggregatesFilter<"Ujian"> | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Ujian"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Ujian"> | Date | string
@@ -447,6 +463,7 @@ export type UjianCreateInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -472,6 +489,7 @@ export type UjianUncheckedCreateInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -493,6 +511,7 @@ export type UjianUpdateInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -518,6 +537,7 @@ export type UjianUncheckedUpdateInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -541,6 +561,7 @@ export type UjianCreateManyInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -560,6 +581,7 @@ export type UjianUpdateManyMutationInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -581,6 +603,7 @@ export type UjianUncheckedUpdateManyInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -612,6 +635,7 @@ export type UjianCountOrderByAggregateInput = {
   acakOpsi?: Prisma.SortOrder
   tampilkanNilai?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -620,6 +644,7 @@ export type UjianCountOrderByAggregateInput = {
 export type UjianAvgOrderByAggregateInput = {
   durasiMenit?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
 }
 
 export type UjianMaxOrderByAggregateInput = {
@@ -638,6 +663,7 @@ export type UjianMaxOrderByAggregateInput = {
   acakOpsi?: Prisma.SortOrder
   tampilkanNilai?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -659,6 +685,7 @@ export type UjianMinOrderByAggregateInput = {
   acakOpsi?: Prisma.SortOrder
   tampilkanNilai?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -667,6 +694,7 @@ export type UjianMinOrderByAggregateInput = {
 export type UjianSumOrderByAggregateInput = {
   durasiMenit?: Prisma.SortOrder
   kkm?: Prisma.SortOrder
+  batasPelanggaran?: Prisma.SortOrder
 }
 
 export type UjianScalarRelationFilter = {
@@ -804,6 +832,7 @@ export type UjianCreateWithoutMapelInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -827,6 +856,7 @@ export type UjianUncheckedCreateWithoutMapelInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -879,6 +909,7 @@ export type UjianScalarWhereInput = {
   acakOpsi?: Prisma.BoolFilter<"Ujian"> | boolean
   tampilkanNilai?: Prisma.BoolFilter<"Ujian"> | boolean
   kkm?: Prisma.FloatFilter<"Ujian"> | number
+  batasPelanggaran?: Prisma.IntFilter<"Ujian"> | number
   status?: Prisma.EnumStatusUjianFilter<"Ujian"> | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Ujian"> | Date | string
@@ -898,6 +929,7 @@ export type UjianCreateWithoutBankSoalInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -921,6 +953,7 @@ export type UjianUncheckedCreateWithoutBankSoalInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -968,6 +1001,7 @@ export type UjianCreateWithoutTargetKelasInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -992,6 +1026,7 @@ export type UjianUncheckedCreateWithoutTargetKelasInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1028,6 +1063,7 @@ export type UjianUpdateWithoutTargetKelasInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1052,6 +1088,7 @@ export type UjianUncheckedUpdateWithoutTargetKelasInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1072,6 +1109,7 @@ export type UjianCreateWithoutSesiUjianListInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1096,6 +1134,7 @@ export type UjianUncheckedCreateWithoutSesiUjianListInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1132,6 +1171,7 @@ export type UjianUpdateWithoutSesiUjianListInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1156,6 +1196,7 @@ export type UjianUncheckedUpdateWithoutSesiUjianListInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1177,6 +1218,7 @@ export type UjianCreateManyMapelInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1196,6 +1238,7 @@ export type UjianUpdateWithoutMapelInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1219,6 +1262,7 @@ export type UjianUncheckedUpdateWithoutMapelInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1241,6 +1285,7 @@ export type UjianUncheckedUpdateManyWithoutMapelInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1261,6 +1306,7 @@ export type UjianCreateManyBankSoalInput = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: number
+  batasPelanggaran?: number
   status?: $Enums.StatusUjian
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1280,6 +1326,7 @@ export type UjianUpdateWithoutBankSoalInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1303,6 +1350,7 @@ export type UjianUncheckedUpdateWithoutBankSoalInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1325,6 +1373,7 @@ export type UjianUncheckedUpdateManyWithoutBankSoalInput = {
   acakOpsi?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tampilkanNilai?: Prisma.BoolFieldUpdateOperationsInput | boolean
   kkm?: Prisma.FloatFieldUpdateOperationsInput | number
+  batasPelanggaran?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumStatusUjianFieldUpdateOperationsInput | $Enums.StatusUjian
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1386,6 +1435,7 @@ export type UjianSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: boolean
+  batasPelanggaran?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1412,6 +1462,7 @@ export type UjianSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: boolean
+  batasPelanggaran?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1435,6 +1486,7 @@ export type UjianSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: boolean
+  batasPelanggaran?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1458,12 +1510,13 @@ export type UjianSelectScalar = {
   acakOpsi?: boolean
   tampilkanNilai?: boolean
   kkm?: boolean
+  batasPelanggaran?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UjianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "judul" | "deskripsi" | "mapelId" | "bankSoalId" | "token" | "tokenUpdatedAt" | "autoRotateToken" | "durasiMenit" | "waktuMulai" | "waktuSelesai" | "acakSoal" | "acakOpsi" | "tampilkanNilai" | "kkm" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["ujian"]>
+export type UjianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "judul" | "deskripsi" | "mapelId" | "bankSoalId" | "token" | "tokenUpdatedAt" | "autoRotateToken" | "durasiMenit" | "waktuMulai" | "waktuSelesai" | "acakSoal" | "acakOpsi" | "tampilkanNilai" | "kkm" | "batasPelanggaran" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["ujian"]>
 export type UjianInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   mapel?: boolean | Prisma.MataPelajaranDefaultArgs<ExtArgs>
   bankSoal?: boolean | Prisma.BankSoalDefaultArgs<ExtArgs>
@@ -1504,6 +1557,7 @@ export type $UjianPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     acakOpsi: boolean
     tampilkanNilai: boolean
     kkm: number
+    batasPelanggaran: number
     status: $Enums.StatusUjian
     createdAt: Date
     updatedAt: Date
@@ -1949,6 +2003,7 @@ export interface UjianFieldRefs {
   readonly acakOpsi: Prisma.FieldRef<"Ujian", 'Boolean'>
   readonly tampilkanNilai: Prisma.FieldRef<"Ujian", 'Boolean'>
   readonly kkm: Prisma.FieldRef<"Ujian", 'Float'>
+  readonly batasPelanggaran: Prisma.FieldRef<"Ujian", 'Int'>
   readonly status: Prisma.FieldRef<"Ujian", 'StatusUjian'>
   readonly createdAt: Prisma.FieldRef<"Ujian", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Ujian", 'DateTime'>

@@ -1477,6 +1477,7 @@ export const UjianScalarFieldEnum = {
   acakOpsi: 'acakOpsi',
   tampilkanNilai: 'tampilkanNilai',
   kkm: 'kkm',
+  batasPelanggaran: 'batasPelanggaran',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

@@ -175,11 +175,12 @@ model Ujian {
   durasiMenit     Int         @default(60)
   waktuMulai     DateTime
   waktuSelesai   DateTime
-  acakSoal       Boolean     @default(false)
-  acakOpsi       Boolean     @default(false)
-  tampilkanNilai Boolean     @default(false)
-  kkm            Float       @default(75.0)
-  status         StatusUjian @default(DRAFT)
+  acakSoal         Boolean     @default(false)
+  acakOpsi         Boolean     @default(false)
+  tampilkanNilai   Boolean     @default(false)
+  kkm              Float       @default(75.0)
+  batasPelanggaran Int         @default(3)
+  status           StatusUjian @default(DRAFT)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 

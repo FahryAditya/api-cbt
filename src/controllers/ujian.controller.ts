@@ -40,6 +40,7 @@ export const getExamsController = async (_req: Request, res: Response) => {
           durationMinutes: ex.durasiMenit,
           totalQuestions: ex.bankSoal?._count?.soalList || 0,
           kkm: ex.kkm,
+          batasPelanggaran: ex.batasPelanggaran ?? 3,
           tampilkanNilai: ex.tampilkanNilai,
           status: ex.status,
           createdAt: ex.createdAt.toISOString(),
@@ -55,7 +56,7 @@ export const getExamsController = async (_req: Request, res: Response) => {
 
 export const createExamController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { title, subject, targetClasses, durationMinutes, token, kkm, bankSoalId } = req.body;
+    const { title, subject, targetClasses, durationMinutes, token, kkm, bankSoalId, batasPelanggaran } = req.body;
 
     if (!title || !Array.isArray(targetClasses) || targetClasses.length === 0) {
       res.status(400).json({
@@ -130,6 +131,10 @@ export const createExamController = async (req: AuthenticatedRequest, res: Respo
         autoRotateToken: true,
         durasiMenit: Number(durationMinutes) || 90,
         kkm: Number(kkm) || 75.0,
+        batasPelanggaran:
+          batasPelanggaran !== undefined && Number(batasPelanggaran) >= 0
+            ? Math.floor(Number(batasPelanggaran))
+            : 3,
         waktuMulai: now,
         waktuSelesai: endTime,
         status: "AKTIF",
@@ -199,8 +204,12 @@ export const regenerateTokenController = async (req: Request, res: Response) => 
 export const updateKkmController = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = String(req.params.id);
-    const { kkm, tampilkanNilai } = req.body;
-    const dataToUpdate: { kkm?: number; tampilkanNilai?: boolean } = {};
+    const { kkm, tampilkanNilai, batasPelanggaran } = req.body;
+    const dataToUpdate: {
+      kkm?: number;
+      tampilkanNilai?: boolean;
+      batasPelanggaran?: number;
+    } = {};
 
     if (kkm !== undefined) {
       const numKkm = Number(kkm);
@@ -215,23 +224,38 @@ export const updateKkmController = async (req: AuthenticatedRequest, res: Respon
       dataToUpdate.tampilkanNilai = Boolean(tampilkanNilai);
     }
 
+    if (batasPelanggaran !== undefined) {
+      const numBatas = Math.floor(Number(batasPelanggaran));
+      if (isNaN(numBatas) || numBatas < 0 || numBatas > 50) {
+        res.status(400).json({
+          success: false,
+          message: "Batas keluar/pelanggaran harus berupa angka 0-50 (0 = nonaktif)",
+        });
+        return;
+      }
+      dataToUpdate.batasPelanggaran = numBatas;
+    }
+
     if (Object.keys(dataToUpdate).length === 0) {
       res.status(400).json({ success: false, message: "Tidak ada pengaturan yang diubah" });
       return;
     }
 
-    const updated = await prisma.ujian.update({
+    const updated = await (prisma.ujian.update as any)({
       where: { id },
       data: dataToUpdate,
     });
 
     res.json({
       success: true,
-      message: `Pengaturan ujian berhasil diperbarui (KKM: ${updated.kkm})`,
+      message: `Pengaturan ujian berhasil diperbarui (KKM: ${updated.kkm}, Batas Blokir: ${
+        updated.batasPelanggaran === 0 ? "Nonaktif" : `${updated.batasPelanggaran}x`
+      })`,
       data: {
         id: updated.id,
         kkm: updated.kkm,
         tampilkanNilai: updated.tampilkanNilai,
+        batasPelanggaran: updated.batasPelanggaran ?? 3,
       },
     });
   } catch (err: any) {
@@ -277,5 +301,116 @@ export const addClassController = async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getCleanupSummaryController = async (req: Request, res: Response) => {
+  try {
+    const ujianId = req.query.ujianId ? String(req.query.ujianId) : undefined;
+    const bankSoalId = req.query.bankSoalId ? String(req.query.bankSoalId) : undefined;
+
+    const [sesiCount, jawabanCount, siswaCount, kelasCount, emptyKelasCount, soalCount] =
+      await Promise.all([
+        prisma.sesiUjian.count({ where: ujianId ? { ujianId } : undefined }),
+        prisma.jawabanSiswa.count({
+          where: ujianId ? { sesiUjian: { ujianId } } : undefined,
+        }),
+        prisma.user.count({ where: { role: "SISWA" } }),
+        prisma.kelas.count(),
+        prisma.kelas.count({ where: { siswa: { none: {} } } }),
+        prisma.soal.count({ where: bankSoalId ? { bankSoalId } : undefined }),
+      ]);
+
+    res.json({
+      success: true,
+      data: {
+        sesiCount,
+        jawabanCount,
+        siswaCount,
+        kelasCount,
+        emptyKelasCount,
+        soalCount,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const cleanupDataController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { targets, ujianId, bankSoalId } = req.body;
+
+    if (!Array.isArray(targets) || targets.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "Pilih minimal 1 kategori data yang akan dibersihkan.",
+      });
+      return;
+    }
+
+    const targetSet = new Set(targets.map((t: any) => String(t)));
+    const summary: Record<string, number> = {
+      sessions: 0,
+      students: 0,
+      classes: 0,
+      questions: 0,
+    };
+
+    // 1. Bersihkan Riwayat Sesi, Jawaban & Nilai Siswa
+    if (targetSet.has("sessions")) {
+      const delSesi = await prisma.sesiUjian.deleteMany({
+        where: ujianId ? { ujianId: String(ujianId) } : undefined,
+      });
+      summary.sessions = delSesi.count;
+    }
+
+    // 2. Bersihkan Seluruh Akun Siswa (User role SISWA; Admin & Guru aman)
+    if (targetSet.has("students")) {
+      const delStudents = await prisma.user.deleteMany({
+        where: { role: "SISWA" },
+      });
+      summary.students = delStudents.count;
+    }
+
+    // 3. Bersihkan Kelas Kosong (atau semua kelas tanpa siswa setelah pembersihan siswa)
+    if (targetSet.has("classes")) {
+      const emptyClasses = await prisma.kelas.findMany({
+        where: { siswa: { none: {} } },
+        select: { id: true },
+      });
+      if (emptyClasses.length > 0) {
+        const ids = emptyClasses.map((c) => c.id);
+        await prisma.ujianKelas.deleteMany({ where: { kelasId: { in: ids } } });
+        const delClasses = await prisma.kelas.deleteMany({ where: { id: { in: ids } } });
+        summary.classes = delClasses.count;
+      }
+    }
+
+    // 4. Bersihkan Butir Soal pada Bank Soal
+    if (targetSet.has("questions")) {
+      const delSoal = await prisma.soal.deleteMany({
+        where: bankSoalId ? { bankSoalId: String(bankSoalId) } : undefined,
+      });
+      summary.questions = delSoal.count;
+    }
+
+    const parts: string[] = [];
+    if (targetSet.has("sessions")) parts.push(`${summary.sessions} sesi ujian`);
+    if (targetSet.has("students")) parts.push(`${summary.students} akun siswa`);
+    if (targetSet.has("classes")) parts.push(`${summary.classes} kelas kosong`);
+    if (targetSet.has("questions")) parts.push(`${summary.questions} butir soal`);
+
+    res.json({
+      success: true,
+      message: `Pembersihan data selesai: ${parts.join(", ")} dihapus permanen.`,
+      data: summary,
+    });
+  } catch (err: any) {
+    console.error("Cleanup Data Error:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal membersihkan data.",
+    });
   }
 };
