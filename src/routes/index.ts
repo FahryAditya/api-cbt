@@ -6,6 +6,7 @@ import ujianRouter from "./ujian.routes";
 import proctoringRouter from "./proctoring.routes";
 import examRouter from "./exam.routes";
 import nilaiRouter from "./nilai.routes";
+import siswaRouter from "./siswa.routes";
 
 const apiRouter = Router();
 
@@ -16,5 +17,6 @@ apiRouter.use("/ujian", ujianRouter);
 apiRouter.use("/proctoring", proctoringRouter);
 apiRouter.use("/exam", examRouter);
 apiRouter.use("/nilai", nilaiRouter);
+apiRouter.use("/siswa", siswaRouter);
 
 export default apiRouter;
