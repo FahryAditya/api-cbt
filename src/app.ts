@@ -24,10 +24,12 @@ export const createApp = (): Application => {
   app.use("/api", globalLimiter);
 
   // Root welcome route
-  app.get("/", (_req, res) => {
+  app.get(["/", "/api", "/api/"], (_req, res) => {
     res.json({
+      success: true,
       message: "CBT Sekolah API is running",
       documentation: "/api/health",
+      database: "Neon PostgreSQL (Connected)",
     });
   });
 
