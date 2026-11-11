@@ -39,6 +39,8 @@ export const getExamsController = async (_req: Request, res: Response) => {
           autoRotateToken: ex.autoRotateToken,
           durationMinutes: ex.durasiMenit,
           totalQuestions: ex.bankSoal?._count?.soalList || 0,
+          bankSoalId: ex.bankSoalId,
+          bankSoalJudul: ex.bankSoal?.judul || "-",
           kkm: ex.kkm,
           batasPelanggaran: ex.batasPelanggaran ?? 3,
           tampilkanNilai: ex.tampilkanNilai,
@@ -56,7 +58,17 @@ export const getExamsController = async (_req: Request, res: Response) => {
 
 export const createExamController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { title, subject, targetClasses, durationMinutes, token, kkm, bankSoalId, batasPelanggaran } = req.body;
+    const {
+      title,
+      subject,
+      targetClasses,
+      durationMinutes,
+      token,
+      kkm,
+      bankSoalId,
+      batasPelanggaran,
+      autoRotateToken,
+    } = req.body;
 
     if (!title || !Array.isArray(targetClasses) || targetClasses.length === 0) {
       res.status(400).json({
@@ -128,7 +140,8 @@ export const createExamController = async (req: AuthenticatedRequest, res: Respo
         bankSoalId: resolvedBankSoalId,
         token: token ? String(token).toUpperCase().trim() : generateExamToken(),
         tokenUpdatedAt: now,
-        autoRotateToken: true,
+        autoRotateToken:
+          autoRotateToken !== undefined ? Boolean(autoRotateToken) : true,
         durasiMenit: Number(durationMinutes) || 90,
         kkm: Number(kkm) || 75.0,
         batasPelanggaran:
@@ -411,6 +424,86 @@ export const cleanupDataController = async (req: AuthenticatedRequest, res: Resp
     res.status(500).json({
       success: false,
       message: err?.message || "Gagal membersihkan data.",
+    });
+  }
+};
+
+export const activateExamBankController = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const ujianId = String(req.params.id);
+    const { bankSoalId, token, autoRotateToken, status } = req.body;
+
+    const existingExam = await prisma.ujian.findUnique({ where: { id: ujianId } });
+    if (!existingExam) {
+      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan." });
+      return;
+    }
+
+    const targetBankId = bankSoalId ? String(bankSoalId) : existingExam.bankSoalId;
+    const bank = await prisma.bankSoal.findUnique({
+      where: { id: targetBankId },
+      include: { _count: { select: { soalList: true } } },
+    });
+    if (!bank) {
+      res.status(404).json({ success: false, message: "Folder Bank Soal tidak ditemukan." });
+      return;
+    }
+    if ((bank._count?.soalList || 0) === 0) {
+      res.status(400).json({
+        success: false,
+        message: `Folder "${bank.judul}" belum memiliki soal (0 butir). Simpan atau import soal terlebih dahulu sebelum memulai ujian.`,
+      });
+      return;
+    }
+
+    const cleanToken =
+      token && String(token).trim()
+        ? String(token).trim().toUpperCase()
+        : existingExam.token || generateExamToken();
+
+    const now = new Date();
+    const nextStatus = status === "DRAFT" || status === "SELESAI" ? status : "AKTIF";
+
+    const updated = await (prisma.ujian.update as any)({
+      where: { id: ujianId },
+      data: {
+        bankSoalId: targetBankId,
+        token: cleanToken,
+        tokenUpdatedAt: now,
+        autoRotateToken:
+          autoRotateToken !== undefined ? Boolean(autoRotateToken) : false,
+        status: nextStatus,
+      },
+      include: {
+        bankSoal: { include: { _count: { select: { soalList: true } } } },
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Ujian "${updated.judul}" aktif menggunakan folder "${bank.judul}" (Token: ${updated.token})!`,
+      data: {
+        id: updated.id,
+        title: updated.judul,
+        bankSoalId: updated.bankSoalId,
+        bankSoalJudul: bank.judul,
+        totalQuestions: updated.bankSoal?._count?.soalList || 0,
+        token: updated.token,
+        tokenUpdatedAt: updated.tokenUpdatedAt.toISOString(),
+        tokenExpiresAt: new Date(now.getTime() + TOKEN_ROTATION_MS).toISOString(),
+        tokenSecondsRemaining: Math.floor(TOKEN_ROTATION_MS / 1000),
+        autoRotateToken: updated.autoRotateToken,
+        status: updated.status,
+      },
+    });
+  } catch (err: any) {
+    console.error("Activate Exam Bank Error:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal mengaktifkan folder soal untuk sesi ujian.",
     });
   }
 };

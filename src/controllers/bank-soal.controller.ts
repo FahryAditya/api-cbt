@@ -9,6 +9,7 @@ export const getBankSoalController = async (_req: Request, res: Response) => {
       include: {
         mapel: true,
         pembuat: { select: { nama: true } },
+        ujianList: { select: { id: true, judul: true, status: true, token: true } },
         _count: { select: { soalList: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -23,6 +24,12 @@ export const getBankSoalController = async (_req: Request, res: Response) => {
       mapelId: b.mapelId,
       pembuat: b.pembuat?.nama || "Guru Pengampu",
       totalSoal: b._count?.soalList || 0,
+      usedInExams: (b.ujianList || []).map((u: any) => ({
+        id: u.id,
+        judul: u.judul,
+        status: u.status,
+        token: u.token,
+      })),
       createdAt: b.createdAt.toISOString(),
     }));
 
@@ -40,8 +47,8 @@ export const createBankSoalController = async (req: AuthenticatedRequest, res: R
     const { judul, deskripsi, mapelId, mapelNama } = req.body;
     const pembuatId = req.user?.userId;
 
-    if (!judul) {
-      res.status(400).json({ success: false, message: "Judul bank soal wajib diisi" });
+    if (!judul || !String(judul).trim()) {
+      res.status(400).json({ success: false, message: "Nama folder bank soal wajib diisi" });
       return;
     }
 
@@ -53,7 +60,7 @@ export const createBankSoalController = async (req: AuthenticatedRequest, res: R
     let resolvedMapelId = mapelId;
     if (!resolvedMapelId && mapelNama) {
       let mapel = await prisma.mataPelajaran.findFirst({
-        where: { nama: String(mapelNama).trim() },
+        where: { nama: { equals: String(mapelNama).trim(), mode: "insensitive" } },
       });
       if (!mapel) {
         mapel = await prisma.mataPelajaran.create({
@@ -67,8 +74,16 @@ export const createBankSoalController = async (req: AuthenticatedRequest, res: R
     }
 
     if (!resolvedMapelId) {
-      const defaultMapel = await prisma.mataPelajaran.findFirst();
-      resolvedMapelId = defaultMapel?.id;
+      let defaultMapel = await prisma.mataPelajaran.findFirst();
+      if (!defaultMapel) {
+        defaultMapel = await prisma.mataPelajaran.create({
+          data: {
+            kode: "PAN-XII",
+            nama: "Pendidikan Pancasila",
+          },
+        });
+      }
+      resolvedMapelId = defaultMapel.id;
     }
 
     const newBankSoal = await prisma.bankSoal.create({
@@ -87,8 +102,66 @@ export const createBankSoalController = async (req: AuthenticatedRequest, res: R
 
     res.status(201).json({
       success: true,
-      message: "Bank soal berhasil disimpan di database Neon PostgreSQL",
-      data: newBankSoal,
+      message: `Folder "${newBankSoal.judul}" berhasil dibuat!`,
+      data: {
+        id: newBankSoal.id,
+        kode: newBankSoal.kode,
+        judul: newBankSoal.judul,
+        deskripsi: newBankSoal.deskripsi,
+        mapel: newBankSoal.mapel?.nama || "Umum",
+        mapelId: newBankSoal.mapelId,
+        pembuat: newBankSoal.pembuat?.nama || "Guru Pengampu",
+        totalSoal: 0,
+        usedInExams: [],
+        createdAt: newBankSoal.createdAt.toISOString(),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateBankSoalController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { judul, deskripsi } = req.body;
+    if (!judul || !String(judul).trim()) {
+      res.status(400).json({ success: false, message: "Nama folder tidak boleh kosong" });
+      return;
+    }
+    const updated = await prisma.bankSoal.update({
+      where: { id },
+      data: {
+        judul: String(judul).trim(),
+        ...(deskripsi !== undefined ? { deskripsi: deskripsi ? String(deskripsi).trim() : null } : {}),
+      },
+    });
+    res.json({
+      success: true,
+      message: `Nama folder diperbarui menjadi "${updated.judul}".`,
+      data: updated,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const deleteBankSoalController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const linkedExams = await prisma.ujian.count({ where: { bankSoalId: id } });
+    if (linkedExams > 0) {
+      res.status(400).json({
+        success: false,
+        message:
+          "Folder ini sedang terhubung ke sesi ujian. Hubungkan sesi ke folder lain lewat tombol Start sebelum menghapus folder ini.",
+      });
+      return;
+    }
+    await prisma.bankSoal.delete({ where: { id } });
+    res.json({
+      success: true,
+      message: "Folder bank soal berhasil dihapus dari database.",
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });

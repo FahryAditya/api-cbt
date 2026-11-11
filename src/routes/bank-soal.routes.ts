@@ -2,6 +2,8 @@ import { Router } from "express";
 import {
   getBankSoalController,
   createBankSoalController,
+  updateBankSoalController,
+  deleteBankSoalController,
   getSoalByBankIdController,
   addSoalController,
   parseWordBankSoalController,
@@ -14,9 +16,11 @@ import { requireRole } from "../middlewares/role.middleware";
 
 const router = Router();
 
-// Routes untuk Bank Soal
+// Routes untuk Bank Soal (Folder & File Soal)
 router.get("/", getBankSoalController);
 router.post("/", authMiddleware, requireRole(["ADMIN", "GURU"]), createBankSoalController);
+router.put("/:id", authMiddleware, requireRole(["ADMIN", "GURU"]), updateBankSoalController);
+router.delete("/:id", authMiddleware, requireRole(["ADMIN", "GURU"]), deleteBankSoalController);
 router.post("/parse-word", authMiddleware, requireRole(["ADMIN", "GURU"]), parseWordBankSoalController);
 router.get("/:id/soal", getSoalByBankIdController);
 router.post("/:id/soal/import", authMiddleware, requireRole(["ADMIN", "GURU"]), importSoalBulkController);

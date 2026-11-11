@@ -8,6 +8,7 @@ import {
   addClassController,
   getCleanupSummaryController,
   cleanupDataController,
+  activateExamBankController,
 } from "../controllers/ujian.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { requireRole } from "../middlewares/role.middleware";
@@ -19,6 +20,7 @@ router.get("/", getExamsController);
 router.post("/", authMiddleware, requireRole(["ADMIN", "GURU"]), createExamController);
 router.get("/cleanup/summary", authMiddleware, requireRole(["ADMIN", "GURU"]), getCleanupSummaryController);
 router.post("/cleanup", authMiddleware, requireRole(["ADMIN"]), cleanupDataController);
+router.patch("/:id/start", authMiddleware, requireRole(["ADMIN", "GURU"]), activateExamBankController);
 router.patch("/:id/token", authMiddleware, requireRole(["ADMIN", "GURU"]), regenerateTokenController);
 router.patch("/:id/kkm", authMiddleware, requireRole(["ADMIN", "GURU"]), updateKkmController);
 
