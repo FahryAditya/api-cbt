@@ -276,6 +276,180 @@ export const saveAnswerController = async (req: AuthenticatedRequest, res: Respo
   }
 };
 
+/**
+ * Batch Autosave Jawaban Siswa (Hemat HTTP, Redis & DB Query)
+ * Memproses banyak perubahan jawaban/ragu-ragu dalam 1x Redis write & 1x prisma.$transaction
+ */
+export const saveAnswersBatchController = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const { ujianId, items } = req.body;
+    const studentId = req.user?.userId;
+
+    if (!studentId || !ujianId || !Array.isArray(items) || items.length === 0) {
+      res.status(400).json({ success: false, message: "Data batch jawaban tidak lengkap" });
+      return;
+    }
+
+    // 1. Deduplikasi item dalam batch berdasarkan soalId atau questionNumber (ambil yang terbaru)
+    const dedupMap = new Map<string, any>();
+    for (const rawItem of items) {
+      if (!rawItem) continue;
+      const key = rawItem.soalId
+        ? `id:${rawItem.soalId}`
+        : rawItem.questionNumber !== undefined
+        ? `num:${Number(rawItem.questionNumber)}`
+        : null;
+      if (key) dedupMap.set(key, rawItem);
+    }
+    const cleanItems = Array.from(dedupMap.values());
+    if (cleanItems.length === 0) {
+      res.json({ success: true, savedCount: 0, message: "Tidak ada perubahan jawaban." });
+      return;
+    }
+
+    // 2. Cek Sesi Ujian hanya 1 kali
+    const sesi = await prisma.sesiUjian.findUnique({
+      where: {
+        ujianId_siswaId: {
+          ujianId: String(ujianId),
+          siswaId: studentId,
+        },
+      },
+      include: {
+        ujian: { select: { bankSoalId: true } },
+      },
+    });
+
+    if (sesi && sesi.status === "TERKUNCI") {
+      res.status(403).json({
+        success: false,
+        isLocked: true,
+        message:
+          "Sesi ujian Anda terkunci karena pelanggaran. Hubungi pengawas untuk membuka kembali.",
+      });
+      return;
+    }
+
+    // 3. Update Redis Cache hanya 1x untuk seluruh item batch
+    const cacheKey = `cbt:session:${ujianId}:${studentId}`;
+    const cachedSession = (await cacheGet<any>(cacheKey)) || { answers: {}, flagged: {} };
+    for (const item of cleanItems) {
+      if (item.questionNumber !== undefined) {
+        if (item.selectedOption !== undefined) {
+          cachedSession.answers[Number(item.questionNumber)] = String(
+            item.selectedOption
+          ).toUpperCase();
+        }
+        if (item.isFlagged !== undefined) {
+          cachedSession.flagged[Number(item.questionNumber)] = Boolean(item.isFlagged);
+        }
+      }
+    }
+    await cacheSet(cacheKey, cachedSession, 10800);
+
+    // 4. Persist semua jawaban valid ke Neon PostgreSQL dalam 1 transaksi
+    let savedCount = 0;
+    if (sesi && sesi.status !== "SELESAI") {
+      // Resolusi bulk hanya bila ada item tanpa soalId
+      const missingSoalNums = cleanItems
+        .filter((it) => !it.soalId && it.questionNumber !== undefined)
+        .map((it) => Number(it.questionNumber));
+
+      const soalNumMap = new Map<number, string>();
+      if (missingSoalNums.length > 0 && sesi.ujian?.bankSoalId) {
+        const soalRows = await prisma.soal.findMany({
+          where: {
+            bankSoalId: sesi.ujian.bankSoalId,
+            nomorUrut: { in: missingSoalNums },
+          },
+          select: { id: true, nomorUrut: true },
+        });
+        soalRows.forEach((s) => soalNumMap.set(s.nomorUrut, s.id));
+      }
+
+      // Resolusi pilihanId bila frontend belum mengirim pilihanId
+      const needOptionLookup = cleanItems.filter(
+        (it) => !it.pilihanId && it.selectedOption
+      );
+      const optionLookupMap = new Map<string, string>();
+      if (needOptionLookup.length > 0) {
+        const targetSoalIds = Array.from(
+          new Set(
+            needOptionLookup
+              .map((it) => it.soalId || soalNumMap.get(Number(it.questionNumber)))
+              .filter(Boolean) as string[]
+          )
+        );
+        if (targetSoalIds.length > 0) {
+          const opts = await prisma.pilihanJawaban.findMany({
+            where: { soalId: { in: targetSoalIds } },
+            select: { id: true, soalId: true, label: true },
+          });
+          opts.forEach((o) =>
+            optionLookupMap.set(`${o.soalId}:${o.label.toUpperCase()}`, o.id)
+          );
+        }
+      }
+
+      const txOps = [];
+      for (const item of cleanItems) {
+        const resolvedSoalId =
+          item.soalId ||
+          (item.questionNumber !== undefined
+            ? soalNumMap.get(Number(item.questionNumber))
+            : undefined);
+        if (!resolvedSoalId) continue;
+
+        const resolvedPilihanId =
+          item.pilihanId ||
+          (item.selectedOption
+            ? optionLookupMap.get(
+                `${resolvedSoalId}:${String(item.selectedOption).toUpperCase()}`
+              ) || null
+            : null);
+
+        txOps.push(
+          prisma.jawabanSiswa.upsert({
+            where: {
+              sesiUjianId_soalId: {
+                sesiUjianId: sesi.id,
+                soalId: resolvedSoalId,
+              },
+            },
+            update: {
+              pilihanId: resolvedPilihanId,
+              isRaguRagu: Boolean(item.isFlagged),
+            },
+            create: {
+              sesiUjianId: sesi.id,
+              soalId: resolvedSoalId,
+              pilihanId: resolvedPilihanId,
+              isRaguRagu: Boolean(item.isFlagged),
+            },
+          })
+        );
+      }
+
+      if (txOps.length > 0) {
+        await prisma.$transaction(txOps);
+        savedCount = txOps.length;
+      }
+    }
+
+    res.json({
+      success: true,
+      savedCount,
+      message: `${savedCount} jawaban disimpan secara batch ke Redis & Neon PostgreSQL.`,
+    });
+  } catch (err: any) {
+    console.error("Save Answers Batch Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const recordViolationController = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { ujianId, sesiId } = req.body;
