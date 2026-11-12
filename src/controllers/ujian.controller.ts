@@ -6,6 +6,8 @@ import {
   generateExamToken,
   TOKEN_ROTATION_MS,
 } from "../utils/token";
+import { calculateExamScore } from "../utils/grading";
+import { cacheSet } from "../config/redis";
 
 export const getExamsController = async (_req: Request, res: Response) => {
   try {
@@ -504,6 +506,88 @@ export const activateExamBankController = async (
     res.status(500).json({
       success: false,
       message: err?.message || "Gagal mengaktifkan folder soal untuk sesi ujian.",
+    });
+  }
+};
+
+export const finishExamSessionController = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const ujianId = String(req.params.id);
+
+    const exam = await prisma.ujian.findUnique({
+      where: { id: ujianId },
+      include: {
+        bankSoal: {
+          include: {
+            soalList: {
+              include: { pilihanJawaban: true },
+            },
+          },
+        },
+        sesiUjianList: {
+          where: { status: { in: ["SEDANG_MENGERJAKAN", "TERKUNCI"] } },
+          include: { jawabanList: true },
+        },
+      },
+    });
+
+    if (!exam) {
+      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan." });
+      return;
+    }
+
+    const now = new Date();
+    const allQuestions = exam.bankSoal?.soalList || [];
+    const activeSessions = exam.sesiUjianList || [];
+
+    const txOps: any[] = [];
+    const cacheUpdates: Promise<void>[] = [];
+
+    for (const sesi of activeSessions) {
+      const { score } = calculateExamScore(allQuestions, sesi.jawabanList, exam.kkm);
+      txOps.push(
+        prisma.sesiUjian.update({
+          where: { id: sesi.id },
+          data: {
+            status: "SELESAI",
+            nilaiAkhir: score,
+            waktuSelesai: now,
+            sisaWaktuDetik: 0,
+          },
+        })
+      );
+      const cacheKey = `cbt:session:${ujianId}:${sesi.siswaId}`;
+      cacheUpdates.push(cacheSet(cacheKey, { isSubmitted: true, score }, 3600));
+    }
+
+    txOps.push(
+      prisma.ujian.update({
+        where: { id: ujianId },
+        data: { status: "SELESAI" },
+      })
+    );
+
+    await prisma.$transaction(txOps);
+    await Promise.allSettled(cacheUpdates);
+
+    res.json({
+      success: true,
+      message: `Sesi ujian "${exam.judul}" berhasil diakhiri! (${activeSessions.length} peserta yang masih aktif otomatis dikumpulkan & dinilai).`,
+      data: {
+        id: exam.id,
+        title: exam.judul,
+        status: "SELESAI",
+        finalizedStudentsCount: activeSessions.length,
+      },
+    });
+  } catch (err: any) {
+    console.error("Finish Exam Session Error:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal mengakhiri sesi ujian.",
     });
   }
 };

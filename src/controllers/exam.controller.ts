@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { cacheGet, cacheSet } from "../config/redis";
 import { prisma } from "../config/prisma";
 import { syncAllActiveExamTokens } from "../utils/token";
+import { calculateExamScore } from "../utils/grading";
 
 export const startExamController = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -507,12 +508,16 @@ export const checkSessionStatusController = async (req: AuthenticatedRequest, re
     const sesiIdParam = req.params.sesiId ? String(req.params.sesiId) : undefined;
     const studentId = req.user?.userId;
 
-    let sesi = null;
+    let sesi: any = null;
     if (sesiIdParam) {
-      sesi = await prisma.sesiUjian.findUnique({ where: { id: sesiIdParam } });
+      sesi = await prisma.sesiUjian.findUnique({
+        where: { id: sesiIdParam },
+        include: { ujian: { select: { tampilkanNilai: true, kkm: true } } },
+      });
     } else if (studentId) {
       sesi = await prisma.sesiUjian.findFirst({
         where: { siswaId: studentId },
+        include: { ujian: { select: { tampilkanNilai: true, kkm: true } } },
         orderBy: { updatedAt: "desc" },
       });
     }
@@ -529,6 +534,9 @@ export const checkSessionStatusController = async (req: AuthenticatedRequest, re
         ujianId: sesi.ujianId,
         status: sesi.status,
         isLocked: sesi.status === "TERKUNCI",
+        isSubmitted: sesi.status === "SELESAI",
+        score: sesi.status === "SELESAI" && sesi.ujian?.tampilkanNilai ? sesi.nilaiAkhir : null,
+        kkm: sesi.ujian?.kkm ?? 75,
         violations: sesi.jumlahPelanggaran,
         timeLeft: sesi.sisaWaktuDetik,
       },
@@ -577,26 +585,12 @@ export const submitExamController = async (req: AuthenticatedRequest, res: Respo
     }
 
     // Koreksi Otomatis berbasis kunci jawaban riil dari Neon PostgreSQL
-    const allQuestions = sesi.ujian.bankSoal.soalList;
-    const totalQuestions = allQuestions.length || 1;
-    let correctCount = 0;
-    let wrongCount = 0;
-
-    allQuestions.forEach((soal: any) => {
-      const kunciJawaban = soal.pilihanJawaban.find((p: any) => p.isKunci);
-      const jawabanSiswa = sesi.jawabanList.find((j: any) => j.soalId === soal.id);
-
-      if (jawabanSiswa && jawabanSiswa.pilihanId) {
-        if (kunciJawaban && jawabanSiswa.pilihanId === kunciJawaban.id) {
-          correctCount += 1;
-        } else {
-          wrongCount += 1;
-        }
-      }
-    });
-
-    const score = Number(((correctCount / totalQuestions) * 100).toFixed(1));
-    const isPassed = score >= sesi.ujian.kkm;
+    const { score, correctCount, wrongCount, unansweredCount, isPassed } =
+      calculateExamScore(
+        sesi.ujian.bankSoal.soalList,
+        sesi.jawabanList,
+        sesi.ujian.kkm
+      );
 
     // Update status sesi menjadi SELESAI dan simpan nilai akhir
     await prisma.sesiUjian.update({
@@ -622,7 +616,7 @@ export const submitExamController = async (req: AuthenticatedRequest, res: Respo
         kkm: sesi.ujian.kkm,
         correctCount,
         wrongCount,
-        unansweredCount: totalQuestions - (correctCount + wrongCount),
+        unansweredCount,
         status: isPassed ? "Tuntas" : "Belum Tuntas",
       },
     });
