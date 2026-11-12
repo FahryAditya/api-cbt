@@ -57,6 +57,7 @@ export const ModelName = {
   GuruProfile: 'GuruProfile',
   MataPelajaran: 'MataPelajaran',
   BankSoal: 'BankSoal',
+  BankSoalFile: 'BankSoalFile',
   Soal: 'Soal',
   PilihanJawaban: 'PilihanJawaban',
   Ujian: 'Ujian',
@@ -155,6 +156,22 @@ export const BankSoalScalarFieldEnum = {
 } as const
 
 export type BankSoalScalarFieldEnum = (typeof BankSoalScalarFieldEnum)[keyof typeof BankSoalScalarFieldEnum]
+
+
+export const BankSoalFileScalarFieldEnum = {
+  id: 'id',
+  bankSoalId: 'bankSoalId',
+  namaFile: 'namaFile',
+  format: 'format',
+  mimeType: 'mimeType',
+  ukuranByte: 'ukuranByte',
+  cloudinaryId: 'cloudinaryId',
+  fileUrl: 'fileUrl',
+  uploadedById: 'uploadedById',
+  createdAt: 'createdAt'
+} as const
+
+export type BankSoalFileScalarFieldEnum = (typeof BankSoalFileScalarFieldEnum)[keyof typeof BankSoalFileScalarFieldEnum]
 
 
 export const SoalScalarFieldEnum = {

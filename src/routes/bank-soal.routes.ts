@@ -10,6 +10,9 @@ import {
   importSoalBulkController,
   deleteSoalController,
   updateSoalController,
+  getBankSoalFilesController,
+  uploadBankSoalFileController,
+  deleteBankSoalFileController,
 } from "../controllers/bank-soal.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { requireRole } from "../middlewares/role.middleware";
@@ -22,6 +25,9 @@ router.post("/", authMiddleware, requireRole(["ADMIN", "GURU"]), createBankSoalC
 router.put("/:id", authMiddleware, requireRole(["ADMIN", "GURU"]), updateBankSoalController);
 router.delete("/:id", authMiddleware, requireRole(["ADMIN", "GURU"]), deleteBankSoalController);
 router.post("/parse-word", authMiddleware, requireRole(["ADMIN", "GURU"]), parseWordBankSoalController);
+router.get("/:id/files", getBankSoalFilesController);
+router.post("/:id/files", authMiddleware, requireRole(["ADMIN", "GURU"]), uploadBankSoalFileController);
+router.delete("/files/:fileId", authMiddleware, requireRole(["ADMIN", "GURU"]), deleteBankSoalFileController);
 router.get("/:id/soal", getSoalByBankIdController);
 router.post("/:id/soal/import", authMiddleware, requireRole(["ADMIN", "GURU"]), importSoalBulkController);
 router.post("/:id/soal", authMiddleware, requireRole(["ADMIN", "GURU"]), addSoalController);

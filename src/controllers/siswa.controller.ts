@@ -16,8 +16,8 @@ async function upsertStudentRow(
   kelasRaw: string,
   ujianId?: string
 ): Promise<{ status: "created" | "skipped"; id: string }> {
-  const nama = namaRaw.trim();
-  const kelasNama = kelasRaw.trim();
+  const nama = namaRaw.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+  const kelasNama = kelasRaw.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
 
   // Tolak baris yang kolom namanya hanya angka/nomor urut (mis. kesalahan pemetaan kolom No)
   if (!nama || !kelasNama || /^\d+$/.test(nama)) {

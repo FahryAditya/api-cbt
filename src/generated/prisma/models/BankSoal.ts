@@ -210,6 +210,7 @@ export type BankSoalWhereInput = {
   pembuat?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   soalList?: Prisma.SoalListRelationFilter
   ujianList?: Prisma.UjianListRelationFilter
+  softfiles?: Prisma.BankSoalFileListRelationFilter
 }
 
 export type BankSoalOrderByWithRelationInput = {
@@ -225,6 +226,7 @@ export type BankSoalOrderByWithRelationInput = {
   pembuat?: Prisma.UserOrderByWithRelationInput
   soalList?: Prisma.SoalOrderByRelationAggregateInput
   ujianList?: Prisma.UjianOrderByRelationAggregateInput
+  softfiles?: Prisma.BankSoalFileOrderByRelationAggregateInput
 }
 
 export type BankSoalWhereUniqueInput = Prisma.AtLeast<{
@@ -243,6 +245,7 @@ export type BankSoalWhereUniqueInput = Prisma.AtLeast<{
   pembuat?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   soalList?: Prisma.SoalListRelationFilter
   ujianList?: Prisma.UjianListRelationFilter
+  softfiles?: Prisma.BankSoalFileListRelationFilter
 }, "id" | "kode">
 
 export type BankSoalOrderByWithAggregationInput = {
@@ -284,6 +287,7 @@ export type BankSoalCreateInput = {
   pembuat: Prisma.UserCreateNestedOneWithoutBankSoalDibuatInput
   soalList?: Prisma.SoalCreateNestedManyWithoutBankSoalInput
   ujianList?: Prisma.UjianCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalUncheckedCreateInput = {
@@ -297,6 +301,7 @@ export type BankSoalUncheckedCreateInput = {
   updatedAt?: Date | string
   soalList?: Prisma.SoalUncheckedCreateNestedManyWithoutBankSoalInput
   ujianList?: Prisma.UjianUncheckedCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileUncheckedCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalUpdateInput = {
@@ -310,6 +315,7 @@ export type BankSoalUpdateInput = {
   pembuat?: Prisma.UserUpdateOneRequiredWithoutBankSoalDibuatNestedInput
   soalList?: Prisma.SoalUpdateManyWithoutBankSoalNestedInput
   ujianList?: Prisma.UjianUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateInput = {
@@ -323,6 +329,7 @@ export type BankSoalUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   soalList?: Prisma.SoalUncheckedUpdateManyWithoutBankSoalNestedInput
   ujianList?: Prisma.UjianUncheckedUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUncheckedUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalCreateManyInput = {
@@ -488,6 +495,20 @@ export type BankSoalUncheckedUpdateManyWithoutMapelNestedInput = {
   deleteMany?: Prisma.BankSoalScalarWhereInput | Prisma.BankSoalScalarWhereInput[]
 }
 
+export type BankSoalCreateNestedOneWithoutSoftfilesInput = {
+  create?: Prisma.XOR<Prisma.BankSoalCreateWithoutSoftfilesInput, Prisma.BankSoalUncheckedCreateWithoutSoftfilesInput>
+  connectOrCreate?: Prisma.BankSoalCreateOrConnectWithoutSoftfilesInput
+  connect?: Prisma.BankSoalWhereUniqueInput
+}
+
+export type BankSoalUpdateOneRequiredWithoutSoftfilesNestedInput = {
+  create?: Prisma.XOR<Prisma.BankSoalCreateWithoutSoftfilesInput, Prisma.BankSoalUncheckedCreateWithoutSoftfilesInput>
+  connectOrCreate?: Prisma.BankSoalCreateOrConnectWithoutSoftfilesInput
+  upsert?: Prisma.BankSoalUpsertWithoutSoftfilesInput
+  connect?: Prisma.BankSoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BankSoalUpdateToOneWithWhereWithoutSoftfilesInput, Prisma.BankSoalUpdateWithoutSoftfilesInput>, Prisma.BankSoalUncheckedUpdateWithoutSoftfilesInput>
+}
+
 export type BankSoalCreateNestedOneWithoutSoalListInput = {
   create?: Prisma.XOR<Prisma.BankSoalCreateWithoutSoalListInput, Prisma.BankSoalUncheckedCreateWithoutSoalListInput>
   connectOrCreate?: Prisma.BankSoalCreateOrConnectWithoutSoalListInput
@@ -526,6 +547,7 @@ export type BankSoalCreateWithoutPembuatInput = {
   mapel: Prisma.MataPelajaranCreateNestedOneWithoutBankSoalInput
   soalList?: Prisma.SoalCreateNestedManyWithoutBankSoalInput
   ujianList?: Prisma.UjianCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalUncheckedCreateWithoutPembuatInput = {
@@ -538,6 +560,7 @@ export type BankSoalUncheckedCreateWithoutPembuatInput = {
   updatedAt?: Date | string
   soalList?: Prisma.SoalUncheckedCreateNestedManyWithoutBankSoalInput
   ujianList?: Prisma.UjianUncheckedCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileUncheckedCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalCreateOrConnectWithoutPembuatInput = {
@@ -590,6 +613,7 @@ export type BankSoalCreateWithoutMapelInput = {
   pembuat: Prisma.UserCreateNestedOneWithoutBankSoalDibuatInput
   soalList?: Prisma.SoalCreateNestedManyWithoutBankSoalInput
   ujianList?: Prisma.UjianCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalUncheckedCreateWithoutMapelInput = {
@@ -602,6 +626,7 @@ export type BankSoalUncheckedCreateWithoutMapelInput = {
   updatedAt?: Date | string
   soalList?: Prisma.SoalUncheckedCreateNestedManyWithoutBankSoalInput
   ujianList?: Prisma.UjianUncheckedCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileUncheckedCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalCreateOrConnectWithoutMapelInput = {
@@ -630,6 +655,74 @@ export type BankSoalUpdateManyWithWhereWithoutMapelInput = {
   data: Prisma.XOR<Prisma.BankSoalUpdateManyMutationInput, Prisma.BankSoalUncheckedUpdateManyWithoutMapelInput>
 }
 
+export type BankSoalCreateWithoutSoftfilesInput = {
+  id?: string
+  kode: string
+  judul: string
+  deskripsi?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  mapel: Prisma.MataPelajaranCreateNestedOneWithoutBankSoalInput
+  pembuat: Prisma.UserCreateNestedOneWithoutBankSoalDibuatInput
+  soalList?: Prisma.SoalCreateNestedManyWithoutBankSoalInput
+  ujianList?: Prisma.UjianCreateNestedManyWithoutBankSoalInput
+}
+
+export type BankSoalUncheckedCreateWithoutSoftfilesInput = {
+  id?: string
+  kode: string
+  judul: string
+  deskripsi?: string | null
+  mapelId: string
+  pembuatId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  soalList?: Prisma.SoalUncheckedCreateNestedManyWithoutBankSoalInput
+  ujianList?: Prisma.UjianUncheckedCreateNestedManyWithoutBankSoalInput
+}
+
+export type BankSoalCreateOrConnectWithoutSoftfilesInput = {
+  where: Prisma.BankSoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.BankSoalCreateWithoutSoftfilesInput, Prisma.BankSoalUncheckedCreateWithoutSoftfilesInput>
+}
+
+export type BankSoalUpsertWithoutSoftfilesInput = {
+  update: Prisma.XOR<Prisma.BankSoalUpdateWithoutSoftfilesInput, Prisma.BankSoalUncheckedUpdateWithoutSoftfilesInput>
+  create: Prisma.XOR<Prisma.BankSoalCreateWithoutSoftfilesInput, Prisma.BankSoalUncheckedCreateWithoutSoftfilesInput>
+  where?: Prisma.BankSoalWhereInput
+}
+
+export type BankSoalUpdateToOneWithWhereWithoutSoftfilesInput = {
+  where?: Prisma.BankSoalWhereInput
+  data: Prisma.XOR<Prisma.BankSoalUpdateWithoutSoftfilesInput, Prisma.BankSoalUncheckedUpdateWithoutSoftfilesInput>
+}
+
+export type BankSoalUpdateWithoutSoftfilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kode?: Prisma.StringFieldUpdateOperationsInput | string
+  judul?: Prisma.StringFieldUpdateOperationsInput | string
+  deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  mapel?: Prisma.MataPelajaranUpdateOneRequiredWithoutBankSoalNestedInput
+  pembuat?: Prisma.UserUpdateOneRequiredWithoutBankSoalDibuatNestedInput
+  soalList?: Prisma.SoalUpdateManyWithoutBankSoalNestedInput
+  ujianList?: Prisma.UjianUpdateManyWithoutBankSoalNestedInput
+}
+
+export type BankSoalUncheckedUpdateWithoutSoftfilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kode?: Prisma.StringFieldUpdateOperationsInput | string
+  judul?: Prisma.StringFieldUpdateOperationsInput | string
+  deskripsi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mapelId?: Prisma.StringFieldUpdateOperationsInput | string
+  pembuatId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  soalList?: Prisma.SoalUncheckedUpdateManyWithoutBankSoalNestedInput
+  ujianList?: Prisma.UjianUncheckedUpdateManyWithoutBankSoalNestedInput
+}
+
 export type BankSoalCreateWithoutSoalListInput = {
   id?: string
   kode: string
@@ -640,6 +733,7 @@ export type BankSoalCreateWithoutSoalListInput = {
   mapel: Prisma.MataPelajaranCreateNestedOneWithoutBankSoalInput
   pembuat: Prisma.UserCreateNestedOneWithoutBankSoalDibuatInput
   ujianList?: Prisma.UjianCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalUncheckedCreateWithoutSoalListInput = {
@@ -652,6 +746,7 @@ export type BankSoalUncheckedCreateWithoutSoalListInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   ujianList?: Prisma.UjianUncheckedCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileUncheckedCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalCreateOrConnectWithoutSoalListInput = {
@@ -680,6 +775,7 @@ export type BankSoalUpdateWithoutSoalListInput = {
   mapel?: Prisma.MataPelajaranUpdateOneRequiredWithoutBankSoalNestedInput
   pembuat?: Prisma.UserUpdateOneRequiredWithoutBankSoalDibuatNestedInput
   ujianList?: Prisma.UjianUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateWithoutSoalListInput = {
@@ -692,6 +788,7 @@ export type BankSoalUncheckedUpdateWithoutSoalListInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ujianList?: Prisma.UjianUncheckedUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUncheckedUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalCreateWithoutUjianListInput = {
@@ -704,6 +801,7 @@ export type BankSoalCreateWithoutUjianListInput = {
   mapel: Prisma.MataPelajaranCreateNestedOneWithoutBankSoalInput
   pembuat: Prisma.UserCreateNestedOneWithoutBankSoalDibuatInput
   soalList?: Prisma.SoalCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalUncheckedCreateWithoutUjianListInput = {
@@ -716,6 +814,7 @@ export type BankSoalUncheckedCreateWithoutUjianListInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   soalList?: Prisma.SoalUncheckedCreateNestedManyWithoutBankSoalInput
+  softfiles?: Prisma.BankSoalFileUncheckedCreateNestedManyWithoutBankSoalInput
 }
 
 export type BankSoalCreateOrConnectWithoutUjianListInput = {
@@ -744,6 +843,7 @@ export type BankSoalUpdateWithoutUjianListInput = {
   mapel?: Prisma.MataPelajaranUpdateOneRequiredWithoutBankSoalNestedInput
   pembuat?: Prisma.UserUpdateOneRequiredWithoutBankSoalDibuatNestedInput
   soalList?: Prisma.SoalUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateWithoutUjianListInput = {
@@ -756,6 +856,7 @@ export type BankSoalUncheckedUpdateWithoutUjianListInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   soalList?: Prisma.SoalUncheckedUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUncheckedUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalCreateManyPembuatInput = {
@@ -778,6 +879,7 @@ export type BankSoalUpdateWithoutPembuatInput = {
   mapel?: Prisma.MataPelajaranUpdateOneRequiredWithoutBankSoalNestedInput
   soalList?: Prisma.SoalUpdateManyWithoutBankSoalNestedInput
   ujianList?: Prisma.UjianUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateWithoutPembuatInput = {
@@ -790,6 +892,7 @@ export type BankSoalUncheckedUpdateWithoutPembuatInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   soalList?: Prisma.SoalUncheckedUpdateManyWithoutBankSoalNestedInput
   ujianList?: Prisma.UjianUncheckedUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUncheckedUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateManyWithoutPembuatInput = {
@@ -822,6 +925,7 @@ export type BankSoalUpdateWithoutMapelInput = {
   pembuat?: Prisma.UserUpdateOneRequiredWithoutBankSoalDibuatNestedInput
   soalList?: Prisma.SoalUpdateManyWithoutBankSoalNestedInput
   ujianList?: Prisma.UjianUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateWithoutMapelInput = {
@@ -834,6 +938,7 @@ export type BankSoalUncheckedUpdateWithoutMapelInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   soalList?: Prisma.SoalUncheckedUpdateManyWithoutBankSoalNestedInput
   ujianList?: Prisma.UjianUncheckedUpdateManyWithoutBankSoalNestedInput
+  softfiles?: Prisma.BankSoalFileUncheckedUpdateManyWithoutBankSoalNestedInput
 }
 
 export type BankSoalUncheckedUpdateManyWithoutMapelInput = {
@@ -854,11 +959,13 @@ export type BankSoalUncheckedUpdateManyWithoutMapelInput = {
 export type BankSoalCountOutputType = {
   soalList: number
   ujianList: number
+  softfiles: number
 }
 
 export type BankSoalCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   soalList?: boolean | BankSoalCountOutputTypeCountSoalListArgs
   ujianList?: boolean | BankSoalCountOutputTypeCountUjianListArgs
+  softfiles?: boolean | BankSoalCountOutputTypeCountSoftfilesArgs
 }
 
 /**
@@ -885,6 +992,13 @@ export type BankSoalCountOutputTypeCountUjianListArgs<ExtArgs extends runtime.Ty
   where?: Prisma.UjianWhereInput
 }
 
+/**
+ * BankSoalCountOutputType without action
+ */
+export type BankSoalCountOutputTypeCountSoftfilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BankSoalFileWhereInput
+}
+
 
 export type BankSoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -899,6 +1013,7 @@ export type BankSoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   pembuat?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   soalList?: boolean | Prisma.BankSoal$soalListArgs<ExtArgs>
   ujianList?: boolean | Prisma.BankSoal$ujianListArgs<ExtArgs>
+  softfiles?: boolean | Prisma.BankSoal$softfilesArgs<ExtArgs>
   _count?: boolean | Prisma.BankSoalCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bankSoal"]>
 
@@ -945,6 +1060,7 @@ export type BankSoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   pembuat?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   soalList?: boolean | Prisma.BankSoal$soalListArgs<ExtArgs>
   ujianList?: boolean | Prisma.BankSoal$ujianListArgs<ExtArgs>
+  softfiles?: boolean | Prisma.BankSoal$softfilesArgs<ExtArgs>
   _count?: boolean | Prisma.BankSoalCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BankSoalIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -963,6 +1079,7 @@ export type $BankSoalPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     pembuat: Prisma.$UserPayload<ExtArgs>
     soalList: Prisma.$SoalPayload<ExtArgs>[]
     ujianList: Prisma.$UjianPayload<ExtArgs>[]
+    softfiles: Prisma.$BankSoalFilePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1371,6 +1488,7 @@ export interface Prisma__BankSoalClient<T, Null = never, ExtArgs extends runtime
   pembuat<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   soalList<T extends Prisma.BankSoal$soalListArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BankSoal$soalListArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SoalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ujianList<T extends Prisma.BankSoal$ujianListArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BankSoal$ujianListArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UjianPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  softfiles<T extends Prisma.BankSoal$softfilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BankSoal$softfilesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BankSoalFilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1854,6 +1972,30 @@ export type BankSoal$ujianListArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.UjianScalarFieldEnum | Prisma.UjianScalarFieldEnum[]
+}
+
+/**
+ * BankSoal.softfiles
+ */
+export type BankSoal$softfilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BankSoalFile
+   */
+  select?: Prisma.BankSoalFileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BankSoalFile
+   */
+  omit?: Prisma.BankSoalFileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BankSoalFileInclude<ExtArgs> | null
+  where?: Prisma.BankSoalFileWhereInput
+  orderBy?: Prisma.BankSoalFileOrderByWithRelationInput | Prisma.BankSoalFileOrderByWithRelationInput[]
+  cursor?: Prisma.BankSoalFileWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BankSoalFileScalarFieldEnum | Prisma.BankSoalFileScalarFieldEnum[]
 }
 
 /**

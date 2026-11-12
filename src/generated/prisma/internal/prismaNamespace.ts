@@ -403,6 +403,7 @@ export const ModelName = {
   GuruProfile: 'GuruProfile',
   MataPelajaran: 'MataPelajaran',
   BankSoal: 'BankSoal',
+  BankSoalFile: 'BankSoalFile',
   Soal: 'Soal',
   PilihanJawaban: 'PilihanJawaban',
   Ujian: 'Ujian',
@@ -424,7 +425,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "kelas" | "siswaProfile" | "guruProfile" | "mataPelajaran" | "bankSoal" | "soal" | "pilihanJawaban" | "ujian" | "ujianKelas" | "sesiUjian" | "jawabanSiswa"
+    modelProps: "user" | "kelas" | "siswaProfile" | "guruProfile" | "mataPelajaran" | "bankSoal" | "bankSoalFile" | "soal" | "pilihanJawaban" | "ujian" | "ujianKelas" | "sesiUjian" | "jawabanSiswa"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -869,6 +870,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BankSoalCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BankSoalCountAggregateOutputType> | number
+        }
+      }
+    }
+    BankSoalFile: {
+      payload: Prisma.$BankSoalFilePayload<ExtArgs>
+      fields: Prisma.BankSoalFileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BankSoalFileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BankSoalFileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>
+        }
+        findFirst: {
+          args: Prisma.BankSoalFileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BankSoalFileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>
+        }
+        findMany: {
+          args: Prisma.BankSoalFileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>[]
+        }
+        create: {
+          args: Prisma.BankSoalFileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>
+        }
+        createMany: {
+          args: Prisma.BankSoalFileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BankSoalFileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>[]
+        }
+        delete: {
+          args: Prisma.BankSoalFileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>
+        }
+        update: {
+          args: Prisma.BankSoalFileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>
+        }
+        deleteMany: {
+          args: Prisma.BankSoalFileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BankSoalFileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BankSoalFileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>[]
+        }
+        upsert: {
+          args: Prisma.BankSoalFileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BankSoalFilePayload>
+        }
+        aggregate: {
+          args: Prisma.BankSoalFileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBankSoalFile>
+        }
+        groupBy: {
+          args: Prisma.BankSoalFileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BankSoalFileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BankSoalFileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BankSoalFileCountAggregateOutputType> | number
         }
       }
     }
@@ -1431,6 +1506,22 @@ export const BankSoalScalarFieldEnum = {
 export type BankSoalScalarFieldEnum = (typeof BankSoalScalarFieldEnum)[keyof typeof BankSoalScalarFieldEnum]
 
 
+export const BankSoalFileScalarFieldEnum = {
+  id: 'id',
+  bankSoalId: 'bankSoalId',
+  namaFile: 'namaFile',
+  format: 'format',
+  mimeType: 'mimeType',
+  ukuranByte: 'ukuranByte',
+  cloudinaryId: 'cloudinaryId',
+  fileUrl: 'fileUrl',
+  uploadedById: 'uploadedById',
+  createdAt: 'createdAt'
+} as const
+
+export type BankSoalFileScalarFieldEnum = (typeof BankSoalFileScalarFieldEnum)[keyof typeof BankSoalFileScalarFieldEnum]
+
+
 export const SoalScalarFieldEnum = {
   id: 'id',
   bankSoalId: 'bankSoalId',
@@ -1849,6 +1940,7 @@ export type GlobalOmitConfig = {
   guruProfile?: Prisma.GuruProfileOmit
   mataPelajaran?: Prisma.MataPelajaranOmit
   bankSoal?: Prisma.BankSoalOmit
+  bankSoalFile?: Prisma.BankSoalFileOmit
   soal?: Prisma.SoalOmit
   pilihanJawaban?: Prisma.PilihanJawabanOmit
   ujian?: Prisma.UjianOmit

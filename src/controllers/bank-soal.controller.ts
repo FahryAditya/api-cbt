@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { prisma } from "../config/prisma";
 import { extractTextFromDocxBase64, parseWordQuestions } from "../utils/word-parser";
+import { uploadSoftfileToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 
 export const getBankSoalController = async (_req: Request, res: Response) => {
   try {
@@ -10,7 +11,7 @@ export const getBankSoalController = async (_req: Request, res: Response) => {
         mapel: true,
         pembuat: { select: { nama: true } },
         ujianList: { select: { id: true, judul: true, status: true, token: true } },
-        _count: { select: { soalList: true } },
+        _count: { select: { soalList: true, softfiles: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -24,6 +25,7 @@ export const getBankSoalController = async (_req: Request, res: Response) => {
       mapelId: b.mapelId,
       pembuat: b.pembuat?.nama || "Guru Pengampu",
       totalSoal: b._count?.soalList || 0,
+      totalSoftfiles: b._count?.softfiles || 0,
       usedInExams: (b.ujianList || []).map((u: any) => ({
         id: u.id,
         judul: u.judul,
@@ -468,6 +470,128 @@ export const importSoalBulkController = async (req: AuthenticatedRequest, res: R
     res.status(500).json({
       success: false,
       message: err?.message || "Gagal mengimport soal ke database.",
+    });
+  }
+};
+
+export const getBankSoalFilesController = async (req: Request, res: Response) => {
+  try {
+    const bankSoalId = String(req.params.id);
+    const files = await prisma.bankSoalFile.findMany({
+      where: { bankSoalId },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json({ success: true, data: files });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err?.message || "Gagal memuat arsip softfile." });
+  }
+};
+
+export const uploadBankSoalFileController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const bankSoalId = String(req.params.id);
+    const { fileName, mimeType, fileBase64 } = req.body;
+
+    if (!fileName || !fileBase64 || typeof fileBase64 !== "string") {
+      res.status(400).json({
+        success: false,
+        message: "Nama file dan isi file wajib dikirim.",
+      });
+      return;
+    }
+
+    const bank = await prisma.bankSoal.findUnique({ where: { id: bankSoalId } });
+    if (!bank) {
+      res.status(404).json({ success: false, message: "Folder Bank Soal tidak ditemukan." });
+      return;
+    }
+
+    const cleanName = String(fileName).trim();
+    const ext = cleanName.split(".").pop()?.toLowerCase() || "";
+    if (!["pdf", "doc", "docx"].includes(ext)) {
+      res.status(400).json({
+        success: false,
+        message: "Format file harus berupa PDF (.pdf) atau Microsoft Word (.doc / .docx).",
+      });
+      return;
+    }
+
+    const base64Body = fileBase64.includes(",") ? fileBase64.split(",")[1] : fileBase64;
+    const buffer = Buffer.from(base64Body, "base64");
+    if (buffer.length === 0) {
+      res.status(400).json({ success: false, message: "File kosong atau rusak." });
+      return;
+    }
+    if (buffer.length > 7 * 1024 * 1024) {
+      res.status(400).json({
+        success: false,
+        message: "Ukuran file maksimal 7 MB.",
+      });
+      return;
+    }
+
+    const format = ext === "pdf" ? "PDF" : "WORD";
+    const resolvedMime =
+      mimeType ||
+      (ext === "pdf"
+        ? "application/pdf"
+        : ext === "docx"
+        ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        : "application/msword");
+
+    const uploaded = await uploadSoftfileToCloudinary({
+      buffer,
+      fileName: cleanName,
+      mimeType: resolvedMime,
+      folder: `cbt-bank-soal/${bankSoalId}`,
+    });
+
+    const saved = await prisma.bankSoalFile.create({
+      data: {
+        bankSoalId,
+        namaFile: cleanName,
+        format,
+        mimeType: resolvedMime,
+        ukuranByte: uploaded.bytes,
+        cloudinaryId: uploaded.publicId,
+        fileUrl: uploaded.secureUrl,
+        uploadedById: req.user?.userId || null,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `Softfile ${format} "${cleanName}" berhasil disimpan ke Cloudinary!`,
+      data: saved,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal mengupload softfile soal ke Cloudinary.",
+    });
+  }
+};
+
+export const deleteBankSoalFileController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const fileId = String(req.params.fileId);
+    const existing = await prisma.bankSoalFile.findUnique({ where: { id: fileId } });
+    if (!existing) {
+      res.status(404).json({ success: false, message: "Softfile tidak ditemukan." });
+      return;
+    }
+
+    await deleteFromCloudinary(existing.cloudinaryId);
+    await prisma.bankSoalFile.delete({ where: { id: fileId } });
+
+    res.json({
+      success: true,
+      message: `Softfile "${existing.namaFile}" berhasil dihapus.`,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal menghapus softfile.",
     });
   }
 };

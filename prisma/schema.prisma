@@ -124,8 +124,26 @@ model BankSoal {
   pembuat User          @relation(fields: [pembuatId], references: [id], onDelete: Restrict)
   soalList Soal[]
   ujianList Ujian[]
+  softfiles BankSoalFile[]
 
   @@map("bank_soal")
+}
+
+model BankSoalFile {
+  id           String   @id @default(cuid())
+  bankSoalId   String
+  namaFile     String
+  format       String   // "PDF" | "WORD"
+  mimeType     String
+  ukuranByte   Int      @default(0)
+  cloudinaryId String
+  fileUrl      String
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  bankSoal BankSoal @relation(fields: [bankSoalId], references: [id], onDelete: Cascade)
+
+  @@map("bank_soal_files")
 }
 
 model Soal {

@@ -13,6 +13,13 @@ function parseTingkatFromKelas(kelasStr: string): number {
   return 12;
 }
 
+function normalizeSpaces(value: string): string {
+  return value
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export const studentEnterController = async (req: Request, res: Response): Promise<void> => {
   try {
     const { nama, kelas, jurusan, tokenUjian } = req.body;
@@ -25,13 +32,12 @@ export const studentEnterController = async (req: Request, res: Response): Promi
       return;
     }
 
-    const rawInputNama = String(nama);
-    const trimmedNama = rawInputNama.trim();
-    const trimmedKelas = String(kelas).trim();
-    const trimmedJurusan = String(jurusan).trim();
-    const normalizedToken = String(tokenUjian).toUpperCase().trim();
+    const normalizedNama = normalizeSpaces(String(nama));
+    const trimmedKelas = normalizeSpaces(String(kelas));
+    const trimmedJurusan = normalizeSpaces(String(jurusan));
+    const normalizedToken = normalizeSpaces(String(tokenUjian)).toUpperCase();
 
-    if (trimmedNama.length < 2) {
+    if (normalizedNama.length < 2) {
       res.status(400).json({
         success: false,
         message: "Nama lengkap minimal 2 karakter.",
@@ -58,20 +64,20 @@ export const studentEnterController = async (req: Request, res: Response): Promi
       return;
     }
 
-    // 2. Cocokkan Kelas + Jurusan terhadap kelas yang SUDAH TERDAFTAR di DB (tanpa auto-create)
+    // 2. Cocokkan Kelas + Jurusan secara berurutan (prioritaskan gabungan Kelas + Jurusan terlebih dahulu)
     const combinedKelas = trimmedKelas.toUpperCase().includes(trimmedJurusan.toUpperCase())
       ? trimmedKelas
       : `${trimmedKelas} ${trimmedJurusan}`;
 
     const kelasCandidates = Array.from(new Set([combinedKelas, trimmedKelas]));
 
-    const kelasRecord = await prisma.kelas.findFirst({
-      where: {
-        OR: kelasCandidates.map((candidate) => ({
-          nama: { equals: candidate, mode: "insensitive" },
-        })),
-      },
-    });
+    let kelasRecord = null;
+    for (const candidate of kelasCandidates) {
+      kelasRecord = await prisma.kelas.findFirst({
+        where: { nama: { equals: candidate, mode: "insensitive" } },
+      });
+      if (kelasRecord) break;
+    }
 
     if (!kelasRecord) {
       res.status(401).json({
@@ -81,11 +87,11 @@ export const studentEnterController = async (req: Request, res: Response): Promi
       return;
     }
 
-    // 3. Wajib cocok 100% SAMA PERSIS (exact case-sensitive) dengan nama siswa di database pada kelas tersebut (tanpa auto-create!)
-    const exactStudent = await prisma.user.findFirst({
+    // 3. Wajib cocok 100% SAMA PERSIS (exact case-sensitive) dengan nama siswa di kelas tersebut
+    let exactStudent = await prisma.user.findFirst({
       where: {
         role: "SISWA",
-        nama: { equals: rawInputNama },
+        nama: { equals: normalizedNama },
         siswaProfile: { kelasId: kelasRecord.id },
       },
       include: {
@@ -93,41 +99,72 @@ export const studentEnterController = async (req: Request, res: Response): Promi
       },
     });
 
-    if (!exactStudent || exactStudent.nama !== rawInputNama) {
-      // Cek diagnosa apakah hanya beda huruf besar/kecil atau salah kelas untuk pesan error yang jelas
-      const sameClassCaseDiff = await prisma.user.findFirst({
+    if (exactStudent && normalizeSpaces(exactStudent.nama) !== normalizedNama) {
+      exactStudent = null;
+    }
+
+    // Fallback aman jika record lama di DB memiliki spasi berlebih / non-breaking space (\u00A0)
+    if (!exactStudent) {
+      const studentsInClass = await prisma.user.findMany({
         where: {
           role: "SISWA",
-          nama: { equals: trimmedNama, mode: "insensitive" },
           siswaProfile: { kelasId: kelasRecord.id },
         },
-        select: { id: true },
+        include: {
+          siswaProfile: { include: { kelas: true } },
+        },
       });
 
-      if (sameClassCaseDiff) {
+      exactStudent =
+        studentsInClass.find((u) => normalizeSpaces(u.nama) === normalizedNama) || null;
+
+      if (!exactStudent) {
+        const sameClassCaseDiff = studentsInClass.find(
+          (u) => normalizeSpaces(u.nama).toLowerCase() === normalizedNama.toLowerCase()
+        );
+
+        if (sameClassCaseDiff) {
+          res.status(401).json({
+            success: false,
+            message:
+              "Penulisan Nama Lengkap belum sama persis huruf besar/kecilnya dengan data sekolah (contoh: huruf kapital awal kata).",
+          });
+          return;
+        }
+
+        const otherClassExact = await prisma.user.findFirst({
+          where: {
+            role: "SISWA",
+            nama: { equals: normalizedNama },
+          },
+          select: { id: true },
+        });
+
+        if (otherClassExact) {
+          res.status(401).json({
+            success: false,
+            message:
+              "Nama Lengkap terdaftar di kelas lain, tetapi Kelas/Jurusan tidak sesuai dengan data di database.",
+          });
+          return;
+        }
+
+        const otherClassCaseDiff = await prisma.user.findFirst({
+          where: {
+            role: "SISWA",
+            nama: { equals: normalizedNama, mode: "insensitive" },
+          },
+          select: { id: true },
+        });
+
         res.status(401).json({
           success: false,
-          message:
-            "Penulisan Nama Lengkap belum sama persis dengan database (perhatikan huruf besar/kecil dan spasi).",
+          message: otherClassCaseDiff
+            ? "Nama Lengkap belum sama persis (huruf besar/kecil) dan Kelas/Jurusan berbeda dari data di database."
+            : `Nama Lengkap tidak terdaftar di kelas "${kelasRecord.nama}". Pastikan nama & kelas sesuai data dari admin/guru.`,
         });
         return;
       }
-
-      const otherClassExact = await prisma.user.findFirst({
-        where: {
-          role: "SISWA",
-          nama: { equals: rawInputNama },
-        },
-        select: { id: true },
-      });
-
-      res.status(401).json({
-        success: false,
-        message: otherClassExact
-          ? "Nama Lengkap terdaftar, tetapi Kelas/Jurusan tidak sesuai dengan data di database."
-          : "Nama Lengkap dan Kelas Anda tidak terdaftar di database atau belum diketik sama persis sesuai data sekolah.",
-      });
-      return;
     }
 
     if (!exactStudent.isActive) {

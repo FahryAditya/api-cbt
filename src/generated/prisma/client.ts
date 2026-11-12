@@ -70,6 +70,11 @@ export type MataPelajaran = Prisma.MataPelajaranModel
  */
 export type BankSoal = Prisma.BankSoalModel
 /**
+ * Model BankSoalFile
+ * 
+ */
+export type BankSoalFile = Prisma.BankSoalFileModel
+/**
  * Model Soal
  * 
  */
