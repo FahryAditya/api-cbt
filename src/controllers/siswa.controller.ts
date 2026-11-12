@@ -115,16 +115,18 @@ export const getStudentsController = async (_req: Request, res: Response) => {
           include: { kelas: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { nama: "asc" },
     });
 
-    const formatted = students.map((s: any) => ({
-      id: s.id,
-      nama: s.nama,
-      username: s.username,
-      kelas: s.siswaProfile?.kelas?.nama || "-",
-      createdAt: s.createdAt.toISOString(),
-    }));
+    const formatted = students
+      .map((s: any) => ({
+        id: s.id,
+        nama: s.nama,
+        username: s.username,
+        kelas: s.siswaProfile?.kelas?.nama || "-",
+        createdAt: s.createdAt.toISOString(),
+      }))
+      .sort((a, b) => a.nama.localeCompare(b.nama, "id", { sensitivity: "base" }));
 
     res.json({ success: true, data: formatted });
   } catch (err: any) {
@@ -255,6 +257,8 @@ export const parseExcelStudentsController = async (req: Request, res: Response) 
         parsed.push({ nama, kelas });
       }
     });
+
+    parsed.sort((a, b) => a.nama.localeCompare(b.nama, "id", { sensitivity: "base" }));
 
     res.json({
       success: true,
