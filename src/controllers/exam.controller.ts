@@ -324,7 +324,16 @@ export const saveAnswersBatchController = async (
       },
     });
 
-    if (sesi && sesi.status === "TERKUNCI") {
+    if (!sesi) {
+      res.status(404).json({
+        success: false,
+        message:
+          "Sesi ujian tidak ditemukan atau sudah berakhir. Silakan masuk ulang dari halaman login.",
+      });
+      return;
+    }
+
+    if (sesi.status === "TERKUNCI") {
       res.status(403).json({
         success: false,
         isLocked: true,
@@ -548,51 +557,83 @@ export const checkSessionStatusController = async (req: AuthenticatedRequest, re
 
 export const submitExamController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { ujianId } = req.body;
+    const { ujianId, sesiId } = req.body;
     const studentId = req.user?.userId;
 
-    if (!studentId || !ujianId) {
+    if (!studentId || (!ujianId && !sesiId)) {
       res.status(400).json({ success: false, message: "Data submit tidak lengkap" });
       return;
     }
 
-    // Ambil sesi ujian dan seluruh jawaban siswa
-    const sesi = await prisma.sesiUjian.findUnique({
-      where: {
-        ujianId_siswaId: { ujianId, siswaId: studentId },
+    const includeTree = {
+      jawabanList: {
+        include: { pilihan: true },
       },
-      include: {
-        jawabanList: {
-          include: { pilihan: true },
-        },
-        ujian: {
-          include: {
-            bankSoal: {
-              include: {
-                soalList: {
-                  include: { pilihanJawaban: true },
-                },
+      ujian: {
+        include: {
+          bankSoal: {
+            include: {
+              soalList: {
+                include: { pilihanJawaban: true },
               },
             },
           },
         },
       },
-    });
+    };
+
+    // 1. Cari sesi ujian lewat (ujianId, studentId), lalu fallback ke sesiId milik studentId yang sama
+    let sesi = ujianId
+      ? await prisma.sesiUjian.findUnique({
+          where: {
+            ujianId_siswaId: { ujianId: String(ujianId), siswaId: studentId },
+          },
+          include: includeTree,
+        })
+      : null;
+
+    if (!sesi && sesiId) {
+      sesi = await prisma.sesiUjian.findFirst({
+        where: { id: String(sesiId), siswaId: studentId },
+        include: includeTree,
+      });
+    }
 
     if (!sesi) {
-      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan" });
+      res.status(404).json({
+        success: false,
+        message:
+          req.user?.role !== "SISWA"
+            ? "Sesi siswa tidak ditemukan karena token autentikasi berubah menjadi akun Guru/Admin. Silakan login ulang di tab Siswa."
+            : "Sesi ujian tidak ditemukan atau telah dihapus/diakhiri oleh pengawas.",
+      });
       return;
     }
 
-    // Koreksi Otomatis berbasis kunci jawaban riil dari Neon PostgreSQL
+    const allQuestions = sesi.ujian.bankSoal?.soalList || [];
     const { score, correctCount, wrongCount, unansweredCount, isPassed } =
-      calculateExamScore(
-        sesi.ujian.bankSoal.soalList,
-        sesi.jawabanList,
-        sesi.ujian.kkm
-      );
+      calculateExamScore(allQuestions, sesi.jawabanList, sesi.ujian.kkm);
 
-    // Update status sesi menjadi SELESAI dan simpan nilai akhir
+    // 2. Idempotensi: jika sesi sudah SELESAI (mis. klik ganda / baru diakhiri pengawas), kembalikan hasil tersimpan
+    if (sesi.status === "SELESAI") {
+      const finalScore = sesi.nilaiAkhir ?? score;
+      res.json({
+        success: true,
+        message: "Ujian sudah dikumpulkan sebelumnya.",
+        data: {
+          score: sesi.ujian.tampilkanNilai ? finalScore : null,
+          tampilkanNilai: sesi.ujian.tampilkanNilai,
+          kkm: sesi.ujian.kkm,
+          correctCount,
+          wrongCount,
+          unansweredCount,
+          status: finalScore >= sesi.ujian.kkm ? "Tuntas" : "Belum Tuntas",
+        },
+      });
+      return;
+    }
+
+    // 3. Update status sesi menjadi SELESAI dan simpan nilai akhir
     await prisma.sesiUjian.update({
       where: { id: sesi.id },
       data: {
@@ -604,7 +645,8 @@ export const submitExamController = async (req: AuthenticatedRequest, res: Respo
     });
 
     // Bersihkan Redis session
-    const cacheKey = `cbt:session:${ujianId}:${studentId}`;
+    const resolvedUjianId = sesi.ujianId;
+    const cacheKey = `cbt:session:${resolvedUjianId}:${studentId}`;
     await cacheSet(cacheKey, { isSubmitted: true, score }, 3600);
 
     res.json({
