@@ -591,3 +591,67 @@ export const finishExamSessionController = async (
     });
   }
 };
+
+export const deleteExamController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const ujianId = String(req.params.id);
+    const exam = await prisma.ujian.findUnique({
+      where: { id: ujianId },
+      select: { id: true, judul: true, status: true },
+    });
+
+    if (!exam) {
+      res.status(404).json({ success: false, message: "Sesi ujian tidak ditemukan." });
+      return;
+    }
+
+    if (exam.status === "AKTIF") {
+      res.status(400).json({
+        success: false,
+        message: `Sesi ujian "${exam.judul}" masih AKTIF. Tekan "Akhiri Sesi" terlebih dahulu sebelum menghapusnya.`,
+      });
+      return;
+    }
+
+    await prisma.ujian.delete({ where: { id: ujianId } });
+    res.json({
+      success: true,
+      message: `Sesi ujian nonaktif "${exam.judul}" berhasil dihapus permanen.`,
+    });
+  } catch (err: any) {
+    console.error("Delete Exam Error:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal menghapus sesi ujian.",
+    });
+  }
+};
+
+export const deleteInactiveExamsController = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const bankSoalId = req.query.bankSoalId ? String(req.query.bankSoalId) : undefined;
+    const whereClause: any = {
+      status: { in: ["SELESAI", "DRAFT"] },
+      ...(bankSoalId ? { bankSoalId } : {}),
+    };
+
+    const result = await prisma.ujian.deleteMany({ where: whereClause });
+    res.json({
+      success: true,
+      deletedCount: result.count,
+      message:
+        result.count > 0
+          ? `${result.count} sesi ujian nonaktif (SELESAI/DRAFT) berhasil dihapus permanen.`
+          : "Tidak ada sesi ujian nonaktif yang perlu dihapus.",
+    });
+  } catch (err: any) {
+    console.error("Delete Inactive Exams Error:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Gagal menghapus sesi ujian nonaktif.",
+    });
+  }
+};

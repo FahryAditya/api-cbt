@@ -149,19 +149,28 @@ export const updateBankSoalController = async (req: AuthenticatedRequest, res: R
 export const deleteBankSoalController = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = String(req.params.id);
-    const linkedExams = await prisma.ujian.count({ where: { bankSoalId: id } });
-    if (linkedExams > 0) {
+    const activeLinkedExams = await prisma.ujian.count({
+      where: { bankSoalId: id, status: "AKTIF" },
+    });
+    if (activeLinkedExams > 0) {
       res.status(400).json({
         success: false,
         message:
-          "Folder ini sedang terhubung ke sesi ujian. Hubungkan sesi ke folder lain lewat tombol Start sebelum menghapus folder ini.",
+          "Folder ini sedang terhubung ke sesi ujian AKTIF. Tekan 'Akhiri Sesi' atau pindahkan sesi ke folder lain sebelum menghapus folder ini.",
       });
       return;
     }
-    await prisma.bankSoal.delete({ where: { id } });
+
+    await prisma.$transaction([
+      prisma.ujian.deleteMany({
+        where: { bankSoalId: id, status: { not: "AKTIF" } },
+      }),
+      prisma.bankSoal.delete({ where: { id } }),
+    ]);
+
     res.json({
       success: true,
-      message: "Folder bank soal berhasil dihapus dari database.",
+      message: "Folder bank soal (beserta sesi ujian nonaktif terkait) berhasil dihapus dari database.",
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
