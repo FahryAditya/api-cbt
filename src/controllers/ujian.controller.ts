@@ -11,6 +11,7 @@ import { cacheSet } from "../config/redis";
 
 export const getExamsController = async (_req: Request, res: Response) => {
   try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     const exams = await (prisma.ujian.findMany as any)({
       include: {
         mapel: true,

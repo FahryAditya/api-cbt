@@ -21,13 +21,24 @@ export async function ensureFreshExamToken<
     autoRotateToken: boolean;
     status: string;
   }
->(exam: T): Promise<T & { tokenExpiresAt: string; tokenSecondsRemaining: number }> {
+>(exam: T): Promise<T & { tokenExpiresAt: string | null; tokenSecondsRemaining: number | null }> {
   const now = Date.now();
   const updatedAtMs = exam.tokenUpdatedAt ? new Date(exam.tokenUpdatedAt).getTime() : now;
   const elapsed = now - updatedAtMs;
 
   let currentToken = exam.token;
   let currentUpdatedAt = new Date(updatedAtMs);
+
+  // Jika rotasi token otomatis dimatikan, token bersifat statis dan tidak memiliki hitung mundur kedaluwarsa
+  if (!exam.autoRotateToken) {
+    return {
+      ...exam,
+      token: currentToken,
+      tokenUpdatedAt: currentUpdatedAt,
+      tokenExpiresAt: null,
+      tokenSecondsRemaining: null,
+    };
+  }
 
   if (
     exam.status === "AKTIF" &&
